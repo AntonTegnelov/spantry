@@ -6,41 +6,55 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Defines the contract for inventory persistence operations.
- * This decouples the application logic from the specific data storage mechanism.
+ * Interface defining the contract for inventory persistence operations.
+ * This abstraction allows decoupling the application logic (service layer)
+ * from the specific data storage mechanism.
  */
 public interface InventoryRepository {
 
     /**
-     * Saves (creates or updates) an item.
-     * @param item The item to save.
-     * @return The saved item (potentially with generated ID or updated state).
+     * Saves a new item or updates an existing item in the repository.
+     * If an item with the same ID already exists, it should be overwritten.
+     *
+     * @param item The item to save (must not be null).
+     * @return The saved item (potentially with a generated ID if it was new).
+     * @throws NullPointerException if the item is null.
      */
     Item save(Item item);
 
     /**
-     * Finds an item by its unique ID.
-     * @param id The ID of the item to find.
-     * @return An Optional containing the item if found, otherwise empty.
+     * Finds an item by its unique identifier.
+     *
+     * @param id The ID of the item to find (must not be null).
+     * @return An Optional containing the found item, or an empty Optional if no item with the given ID exists.
+     * @throws NullPointerException if the id is null.
      */
     Optional<Item> findById(String id);
 
     /**
-     * Retrieves all items.
-     * @return A list of all items, which may be empty.
+     * Retrieves all items currently stored in the repository.
+     *
+     * @return A List containing all items. Returns an empty list if the repository is empty.
+     *         The returned list should be unmodifiable or a defensive copy to protect the repository's internal state.
      */
     List<Item> findAll();
 
     /**
-     * Deletes an item by its unique ID.
-     * @param id The ID of the item to delete.
+     * Deletes an item from the repository based on its unique identifier.
+     * If no item with the given ID exists, the operation should do nothing.
+     *
+     * @param id The ID of the item to delete (must not be null).
+     * @throws NullPointerException if the id is null.
      */
     void deleteById(String id);
 
     /**
      * Finds all items stored in a specific location.
-     * @param location The location to search for.
-     * @return A list of items found in the specified location, which may be empty.
+     *
+     * @param location The location to search for items (must not be null).
+     * @return A List containing all items found in the specified location. Returns an empty list if no items are found.
+     *         The returned list should be unmodifiable or a defensive copy.
+     * @throws NullPointerException if the location is null.
      */
     List<Item> findByLocation(Location location);
 } 

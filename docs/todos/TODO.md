@@ -34,9 +34,9 @@ This document outlines the specific tasks for building the Spantry application, 
   - [x] Define `Item` class (`Item.java`) - Properties: `id` (String), `name` (String), `quantity` (int), `location` (Enum), `expirationDate` (Optional<LocalDate>). Keep this class focused on state and essential invariants.
   - [x] Define `Location` enum (`Location.java`).
 - **[API/Abstractions]** (`src/main/java/com/spantry/inventory/api` or `src/main/java/com/spantry/inventory/service` & `repository`)
-  - [ ] Define `InventoryRepository` interface (`InventoryRepository.java`) - Methods: `save(Item item)`, `findById(String id)`, `findAll()`, `deleteById(String id)`, `findByLocation(Location location)`. Defines the _contract_ for persistence.
-  - [ ] Define `InventoryService` interface (`InventoryService.java`) - Methods define _use cases_: `addItem(AddItemCommand cmd)`, `getAllItems()`, `getItemsByLocation(Location location)`, `removeItem(String itemId)`. (Consider using Command objects or simple DTOs for input to avoid primitive obsession).
-  - [ ] Define simple DTOs/Command objects if needed for the Service interface (e.g., `AddItemCommand.java`) to enhance decoupling by preventing domain object details from leaking into the public API.
+  - [x] Define `InventoryRepository` interface (`InventoryRepository.java`) - Methods: `save(Item item)`, `findById(String id)`, `findAll()`, `deleteById(String id)`, `findByLocation(Location location)`. Defines the _contract_ for persistence.
+  - [x] Define `InventoryService` interface (`InventoryService.java`) - Methods define _use cases_: `addItem(AddItemCommand cmd)`, `getAllItems()`, `getItemsByLocation(Location location)`, `removeItem(String itemId)`. (Consider using Command objects or simple DTOs for input to avoid primitive obsession).
+  - [x] Define simple DTOs/Command objects if needed for the Service interface (e.g., `AddItemCommand.java`) to enhance decoupling by preventing domain object details from leaking into the public API.
   - [ ] Consider defining custom, specific exceptions (e.g., `ItemNotFoundException`) that the service layer can throw to represent business rule violations or failures.
 - **[Implementation - Persistence]** (`src/main/java/com/spantry/inventory/repository`)
   - [ ] Implement `InMemoryInventoryRepository` (`InMemoryInventoryRepository.java`) - Implements `InventoryRepository`. Use a `Map<String, Item>` internally. Handle ID generation (e.g., `UUID.randomUUID().toString()`) as an implementation detail of this specific repository. _This class is an implementation detail._
