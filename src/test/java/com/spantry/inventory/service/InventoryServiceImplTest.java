@@ -3,8 +3,11 @@ package com.spantry.inventory.service;
 import com.spantry.inventory.domain.Item;
 import com.spantry.inventory.domain.Location;
 import com.spantry.inventory.repository.InventoryRepository;
-import com.spantry.inventory.service.dto.AddItemCommand;
+import com.spantry.inventory.service.dto.AddItemCommandDto;
 import com.spantry.inventory.service.exception.ItemNotFoundException;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,15 +15,18 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link InventoryServiceImpl}.
@@ -36,7 +42,7 @@ class InventoryServiceImplTest {
 
     private Item sampleItem1;
     private Item sampleItem2;
-    private AddItemCommand sampleAddCommand;
+    private AddItemCommandDto sampleAddCommandDto;
 
     @BeforeEach
     void setUp() {
@@ -44,24 +50,24 @@ class InventoryServiceImplTest {
         // Reusable test data
         sampleItem1 = new Item("id1", "Apple", 5, Location.PANTRY, Optional.empty());
         sampleItem2 = new Item("id2", "Milk", 1, Location.FRIDGE, Optional.of(LocalDate.now().plusDays(7)));
-        sampleAddCommand = new AddItemCommand("Banana", 3, Location.COUNTER, Optional.empty());
+        sampleAddCommandDto = new AddItemCommandDto("Banana", 3, Location.COUNTER, Optional.empty());
     }
 
     @Test
     void addItem_shouldCallRepositorySaveAndReturnItem() {
         // Arrange
-        Item savedItem = new Item("newId", sampleAddCommand.name(), sampleAddCommand.quantity(), sampleAddCommand.location(), sampleAddCommand.expirationDate());
+        Item savedItem = new Item("newId", sampleAddCommandDto.name(), sampleAddCommandDto.quantity(), sampleAddCommandDto.location(), sampleAddCommandDto.expirationDate());
 
         // Simulate repository save behavior - SIMPLIFIED
         when(mockInventoryRepository.save(any(Item.class))).thenReturn(savedItem);
 
         // Act
-        Item result = inventoryService.addItem(sampleAddCommand);
+        Item result = inventoryService.addItem(sampleAddCommandDto);
 
         // Assert
         assertNotNull(result); // Check result is not null
         assertEquals(savedItem.getId(), result.getId());
-        assertEquals(sampleAddCommand.name(), result.getName());
+        assertEquals(sampleAddCommandDto.name(), result.getName());
 
         // Verify repository.save was called
         verify(mockInventoryRepository, times(1)).save(any(Item.class));

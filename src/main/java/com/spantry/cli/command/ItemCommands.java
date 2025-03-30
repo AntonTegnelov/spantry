@@ -3,17 +3,17 @@ package com.spantry.cli.command;
 import picocli.CommandLine.Command;
 
 /**
- * Container command for all item-related subcommands (add, list, remove).
- * This groups related commands under the 'item' subcommand.
+ * Groups subcommands related to inventory item management under the 'item' command.
  */
 @Command(name = "item",
-        description = "Manage inventory items.",
-        subcommands = {
-                AddItemCommand.class,
-                ListItemsCommand.class,
-                RemoveItemCommand.class
-                // Add more item-related subcommands here
-        })
+         description = "Manage inventory items (add, list, remove).",
+         subcommands = {
+             AddItemCommand.class,
+             ListItemsCommand.class,
+             RemoveItemCommand.class
+             // Add other item-related commands here (e.g., update)
+         })
 public class ItemCommands {
-    // This class doesn't need implementation, it just groups subcommands.
+    // This class doesn't need to be runnable itself,
+    // it just acts as a container for subcommands.
 } 

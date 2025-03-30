@@ -28,7 +28,13 @@ public final class Item {
      * @throws NullPointerException     if name, location, or expirationDate is null.
      * @throws IllegalArgumentException if quantity is negative.
      */
-    public Item(String id, String name, int quantity, Location location, Optional<LocalDate> expirationDate) {
+    public Item(
+            String id,
+            String name,
+            int quantity,
+            Location location,
+            Optional<LocalDate> expirationDate
+    ) {
         this.id = id; // Allow null ID initially
         this.name = Objects.requireNonNull(name, "Item name cannot be null");
         if (quantity < 0) {
@@ -36,7 +42,10 @@ public final class Item {
         }
         this.quantity = quantity;
         this.location = Objects.requireNonNull(location, "Item location cannot be null");
-        this.expirationDate = Objects.requireNonNull(expirationDate, "Expiration date Optional cannot be null");
+        this.expirationDate = Objects.requireNonNull(
+                expirationDate,
+                "Expiration date Optional cannot be null"
+        );
     }
 
     /**
@@ -86,14 +95,18 @@ public final class Item {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         Item item = (Item) o;
-        return quantity == item.quantity &&
-               id.equals(item.id) &&
-               name.equals(item.name) &&
-               location == item.location && // Enum comparison using == is safe
-               expirationDate.equals(item.expirationDate);
+        return quantity == item.quantity
+                && Objects.equals(id, item.id) // Use Objects.equals for potentially null id
+                && name.equals(item.name)
+                && location == item.location // Enum comparison using == is safe
+                && expirationDate.equals(item.expirationDate);
     }
 
     @Override
@@ -103,12 +116,11 @@ public final class Item {
 
     @Override
     public String toString() {
-        return "Item{" +
-               "id='" + id + '\'' +
-               ", name='" + name + '\'' +
-               ", quantity=" + quantity +
-               ", location=" + location +
-               ", expirationDate=" + expirationDate +
-               '}';
+        return "Item{" + "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", quantity=" + quantity +
+                ", location=" + location +
+                ", expirationDate=" + expirationDate +
+                '}';
     }
 } 

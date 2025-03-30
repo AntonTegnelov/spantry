@@ -1,42 +1,75 @@
 package com.spantry.cli.command;
 
-import com.spantry.inventory.service.InventoryService; // Depends on the SERVICE INTERFACE
+import com.spantry.inventory.domain.Item;
+import com.spantry.inventory.domain.Location;
+import com.spantry.inventory.service.InventoryService;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
+import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.Objects;
 
 /**
- * Picocli command to list inventory items.
- * // TODO: Define Options for filtering (e.g., by location) or sorting.
- * // TODO: Inject InventoryService.
- * // TODO: Implement call() method to invoke appropriate InventoryService method(s).
- * // TODO: Format and print the list of items to the console.
+ * Command to list inventory items.
  */
-@Command(name = "list", description = "List inventory items.")
+@Command(name = "list",
+         description = "Lists inventory items, optionally filtered by location.",
+         mixinStandardHelpOptions = true)
 public class ListItemsCommand implements Callable<Integer> {
 
     private final InventoryService inventoryService;
 
-    // Constructor for Dependency Injection
+    @Option(names = {"-l", "--location"}, description = "Filter items by location (e.g., PANTRY, FRIDGE, FREEZER). Optional.")
+    private Location location;
+
+    /**
+     * Constructor for Dependency Injection.
+     *
+     * @param inventoryService The service to retrieve inventory data.
+     */
     public ListItemsCommand(InventoryService inventoryService) {
-        this.inventoryService = Objects.requireNonNull(inventoryService, "inventoryService cannot be null");
+        this.inventoryService = inventoryService;
     }
 
-    // Define command line options using @Option
-    // Example:
-    // @Option(names = {"-l", "--location"}, description = "Filter by location (e.g., FRIDGE)")
-    // private com.spantry.inventory.domain.Location filterLocation;
-
     @Override
-    public Integer call() throws Exception {
-        System.out.println("Executing list items command...");
-        // TODO: 1. Check for filter options.
-        // TODO: 2. Call inventoryService.getAllItems() or getItemsByLocation().
-        // TODO: 3. Format the output (e.g., as a table).
-        // TODO: 4. Print the formatted list.
-        // TODO: 5. Return exit code 0.
-        return 0; // Placeholder
+    public Integer call() {
+        try {
+            List<Item> items;
+            if (location == null) {
+                System.out.println("Listing all inventory items:");
+                items = inventoryService.getAllItems();
+            } else {
+                System.out.println("Listing items in location: " + location);
+                items = inventoryService.getItemsByLocation(location);
+            }
+
+            if (items.isEmpty()) {
+                System.out.println("  No items found.");
+            } else {
+                // Simple tabular format
+                System.out.printf("  %-38s %-15s %-10s %-10s %s%n",
+                        "ID", "Name", "Quantity", "Location", "Expires");
+                System.out.println("  " + "-".repeat(90)); // Separator line
+                for (Item item : items) {
+                    String expiryStr = item.getExpirationDate().map(Object::toString).orElse("N/A");
+                    System.out.printf("  %-38s %-15s %-10d %-10s %s%n",
+                            item.getId(),
+                            truncate(item.getName(), 15),
+                            item.getQuantity(),
+                            item.getLocation(),
+                            expiryStr);
+                }
+            }
+            return 0; // Success
+        } catch (Exception e) {
+            System.err.println("Error listing items: " + e.getMessage());
+            return 1; // Error
+        }
+    }
+
+    // Helper to truncate long names for display
+    private String truncate(String text, int maxLength) {
+        if (text == null) return "";
+        return text.length() <= maxLength ? text : text.substring(0, maxLength - 3) + "...";
     }
 } 

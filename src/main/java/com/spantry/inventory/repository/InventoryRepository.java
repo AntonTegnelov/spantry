@@ -26,7 +26,8 @@ public interface InventoryRepository {
      * Finds an item by its unique identifier.
      *
      * @param id The ID of the item to find (must not be null).
-     * @return An Optional containing the found item, or an empty Optional if no item with the given ID exists.
+     * @return An Optional containing the found item, or an empty Optional if no item with the
+     *         given ID exists.
      * @throws NullPointerException if the id is null.
      */
     Optional<Item> findById(String id);
@@ -35,7 +36,8 @@ public interface InventoryRepository {
      * Retrieves all items currently stored in the repository.
      *
      * @return A List containing all items. Returns an empty list if the repository is empty.
-     *         The returned list should be unmodifiable or a defensive copy to protect the repository's internal state.
+     *         The returned list should be unmodifiable or a defensive copy to protect the
+     *         repository's internal state.
      */
     List<Item> findAll();
 
@@ -52,7 +54,8 @@ public interface InventoryRepository {
      * Finds all items stored in a specific location.
      *
      * @param location The location to search for items (must not be null).
-     * @return A List containing all items found in the specified location. Returns an empty list if no items are found.
+     * @return A List containing all items found in the specified location. Returns an empty list
+     *         if no items are found.
      *         The returned list should be unmodifiable or a defensive copy.
      * @throws NullPointerException if the location is null.
      */

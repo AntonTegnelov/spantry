@@ -31,7 +31,9 @@ public class InMemoryInventoryRepository implements InventoryRepository {
         if (id == null || id.isBlank()) {
             // Generate ID and create the final Item object to be stored and returned
             id = UUID.randomUUID().toString();
-            itemToStore = new Item(id, item.getName(), item.getQuantity(), item.getLocation(), item.getExpirationDate());
+            itemToStore = new Item(
+                id, item.getName(), item.getQuantity(), item.getLocation(), item.getExpirationDate()
+            );
         } else {
             // Use the provided item directly if it already has an ID (update scenario)
             itemToStore = item;

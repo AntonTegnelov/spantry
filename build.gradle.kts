@@ -7,6 +7,8 @@ plugins {
     checkstyle
     // Apply the PMD plugin
     pmd
+    // Apply the Spotless plugin
+    id("com.diffplug.spotless") version "6.25.0"
 }
 
 repositories {
@@ -17,6 +19,24 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
         vendor.set(JvmVendorSpec.ADOPTIUM)
+    }
+}
+
+// Spotless configuration
+spotless {
+    // Configure Java formatting
+    java {
+        // Use google-java-format, which follows Google Style Guide
+        googleJavaFormat()
+        // Remove unused imports
+        removeUnusedImports()
+        // Ensure consistent line endings
+        lineEndings = com.diffplug.spotless.LineEnding.PLATFORM_NATIVE // Or WINDOWS, UNIX
+    }
+    // Optional: Configure formatting for other file types like build.gradle.kts itself
+    kotlinGradle {
+        target("*.gradle.kts")
+        ktlint("1.2.1")
     }
 }
 
@@ -33,6 +53,13 @@ dependencies {
 
     // CLI Argument Parsing
     implementation("info.picocli:picocli:4.7.6")
+
+    // Jakarta Bean Validation API
+    implementation("jakarta.validation:jakarta.validation-api:3.0.2")
+    // Hibernate Validator (Implementation for Validation API)
+    implementation("org.hibernate.validator:hibernate-validator:8.0.1.Final")
+    // Required for Hibernate Validator
+    runtimeOnly("org.glassfish:jakarta.el:4.0.2")
 }
 
 application {
@@ -80,7 +107,14 @@ pmd {
 }
 
 // Ensure the check task depends on checkstyle and pmd tasks
+// AND make check task depend on spotlessCheck for verification
 tasks.named("check") { 
     dependsOn(tasks.withType<Checkstyle>()) 
     dependsOn(tasks.withType<Pmd>()) 
+    dependsOn(tasks.named("spotlessCheck")) // Add dependency on spotlessCheck
+} 
+
+// Optional: Make spotlessApply run before compilation to auto-format
+tasks.withType<JavaCompile>().configureEach {
+    dependsOn(tasks.named("spotlessApply"))
 } 

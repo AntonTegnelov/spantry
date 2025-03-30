@@ -1,5 +1,6 @@
 package com.spantry.cli;
 
+import com.spantry.cli.command.ItemCommands;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 // import com.spantry.cli.command.ItemCommands; // Will be added later
@@ -12,6 +13,7 @@ import picocli.CommandLine.Command;
          version = "Spantry CLI 1.0",
          description = "Manages your pantry inventory.",
          subcommands = {
+              ItemCommands.class // Register the item command group
              // ItemCommands.class // Add inventory commands later
          })
 public class SpantryCliApp implements Runnable {

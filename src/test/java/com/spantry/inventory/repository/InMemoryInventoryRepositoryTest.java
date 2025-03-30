@@ -2,14 +2,15 @@ package com.spantry.inventory.repository;
 
 import com.spantry.inventory.domain.Item;
 import com.spantry.inventory.domain.Location;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for {@link InMemoryInventoryRepository}.
@@ -52,7 +53,8 @@ class InMemoryInventoryRepositoryTest {
         Item savedInitial = repository.save(initialItem);
         String existingId = savedInitial.getId();
 
-        Item updatedItem = new Item(existingId, "Updated Name", 5, Location.FRIDGE, Optional.empty());
+        Item updatedItem = new Item(
+            existingId, "Updated Name", 5, Location.FRIDGE, Optional.empty());
 
         // Act
         Item savedUpdated = repository.save(updatedItem);
@@ -72,7 +74,8 @@ class InMemoryInventoryRepositoryTest {
     @Test
     void findById_existingItem_shouldReturnItem() {
         // Arrange
-        Item item = repository.save(new Item(null, "Find Me", 1, Location.CUPBOARD, Optional.empty()));
+        Item item = repository.save(
+            new Item(null, "Find Me", 1, Location.CUPBOARD, Optional.empty()));
         String id = item.getId();
 
         // Act
@@ -105,8 +108,10 @@ class InMemoryInventoryRepositoryTest {
     @Test
     void findAll_withItems_shouldReturnAllItems() {
         // Arrange
-        Item item1 = repository.save(new Item(null, "Item 1", 1, Location.PANTRY, Optional.empty()));
-        Item item2 = repository.save(new Item(null, "Item 2", 2, Location.FRIDGE, Optional.of(LocalDate.now())));
+        Item item1 = repository.save(
+            new Item(null, "Item 1", 1, Location.PANTRY, Optional.empty()));
+        Item item2 = repository.save(
+            new Item(null, "Item 2", 2, Location.FRIDGE, Optional.of(LocalDate.now())));
 
         // Act
         List<Item> allItems = repository.findAll();
@@ -121,7 +126,8 @@ class InMemoryInventoryRepositoryTest {
     @Test
     void deleteById_existingItem_shouldRemoveItem() {
         // Arrange
-        Item item = repository.save(new Item(null, "Delete Me", 1, Location.FREEZER, Optional.empty()));
+        Item item = repository.save(
+            new Item(null, "Delete Me", 1, Location.FREEZER, Optional.empty()));
         String id = item.getId();
         assertTrue(repository.findById(id).isPresent(), "Item should exist before delete");
 
@@ -135,7 +141,8 @@ class InMemoryInventoryRepositoryTest {
     @Test
     void deleteById_nonExistentItem_shouldDoNothing() {
         // Arrange
-        repository.save(new Item(null, "Existing", 1, Location.COUNTER, Optional.empty()));
+        repository.save(
+            new Item(null, "Existing", 1, Location.COUNTER, Optional.empty()));
         long initialCount = repository.findAll().size();
 
         // Act
@@ -148,9 +155,12 @@ class InMemoryInventoryRepositoryTest {
     @Test
     void findByLocation_shouldReturnMatchingItems() {
         // Arrange
-        Item pantryItem1 = repository.save(new Item(null, "Pantry 1", 1, Location.PANTRY, Optional.empty()));
-        Item fridgeItem = repository.save(new Item(null, "Fridge 1", 1, Location.FRIDGE, Optional.empty()));
-        Item pantryItem2 = repository.save(new Item(null, "Pantry 2", 2, Location.PANTRY, Optional.empty()));
+        final Item pantryItem1 = repository.save(
+            new Item(null, "Pantry 1", 1, Location.PANTRY, Optional.empty()));
+        final Item fridgeItem = repository.save(
+            new Item(null, "Fridge 1", 1, Location.FRIDGE, Optional.empty()));
+        final Item pantryItem2 = repository.save(
+            new Item(null, "Pantry 2", 2, Location.PANTRY, Optional.empty()));
 
         // Act
         List<Item> pantryItems = repository.findByLocation(Location.PANTRY);
