@@ -1,0 +1,95 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Coding Conventions for Spantry (Prioritizing Stability)
+
+These conventions guide AI-assisted development for the Spantry project, prioritizing stability, robustness, and maintainability over rapid prototyping.
+
+- **Explicit Types:**
+
+  - Always use specific types for variables, fields, method parameters, and return types. Avoid `var` unless the type is obvious and it significantly improves readability without sacrificing clarity.
+
+- **Comprehensive Error Handling:**
+
+  - Use checked exceptions for recoverable errors where the caller should handle the condition explicitly.
+  - Use specific runtime exceptions (subclasses of `RuntimeException`, e.g., `IllegalArgumentException`, `IllegalStateException`) for programming errors or unrecoverable situations.
+  - Define custom, specific exception classes (both checked and unchecked as appropriate) for distinct business logic errors instead of using generic `Exception` or `RuntimeException`. Document them clearly.
+  - Avoid catching generic `Exception`, `RuntimeException`, or `Throwable`. Catch the most specific exception type(s) possible.
+  - Never swallow exceptions (empty catch blocks). Log them or re-throw them appropriately (potentially wrapped in a more specific custom exception).
+  - Use descriptive error messages in exceptions.
+
+- **Immutability:**
+
+  - Prefer immutable objects. Design classes with `final` fields initialized in the constructor. Provide getters but no setters for state that shouldn't change.
+  - Use `final` for local variables and method parameters whenever they are not reassigned.
+  - When returning collections from methods that should not be modified by the caller, return unmodifiable views (e.g., `Collections.unmodifiableList(...)`, `List.copyOf(...)`).
+
+- **Null Handling:**
+
+  - Avoid returning `null` from methods. Prefer returning empty collections (e.g., `Collections.emptyList()`), `Optional<T>`, or throwing specific exceptions.
+  - Use `Optional<T>` judiciously, primarily as a return type for methods where absence is an expected, normal outcome (e.g., `findById`). Avoid using `Optional` for fields or method parameters.
+  - Use `@NonNull` and `@Nullable` annotations (e.g., from `jakarta.validation.constraints`) to clearly define the nullability contract of parameters, return values, and fields.
+  - Validate parameters for nullness explicitly at the beginning of methods (especially public ones) using `Objects.requireNonNull(arg, "message")` or similar checks.
+
+- **Dependency Injection & SOLID:**
+
+  - Strictly adhere to SOLID principles.
+  - Apply Dependency Injection (DI) consistently, preferring constructor injection.
+  - Components MUST depend on abstractions (interfaces), not concrete implementations (Dependency Inversion Principle). Concrete classes should only be instantiated in the composition root (`Main` or a dedicated DI configuration).
+
+- **Defensive Programming:**
+
+  - Validate method arguments and object state rigorously, especially at API boundaries (public methods). Throw appropriate exceptions (e.g., `IllegalArgumentException`) upon validation failure.
+  - Check for preconditions, postconditions, and invariants where critical.
+
+- **Dependencies:**
+
+  - Prefer standard Java SE APIs whenever sufficient.
+  - When adding external libraries (Maven/Gradle dependencies):
+    - Choose well-maintained, stable, and reputable libraries.
+    - Clearly document the _reason_ for adding a new dependency.
+    - Be mindful of the transitive dependency tree and potential conflicts.
+    - Keep dependencies updated, but prioritize stability over bleeding-edge versions.
+
+- **Concurrency:**
+
+  - Minimize shared mutable state.
+  - If concurrency is required, use `java.util.concurrent` primitives (e.g., `ExecutorService`, `ConcurrentHashMap`, locks, atomics) correctly and carefully.
+  - Ensure classes intended for concurrent use are explicitly designed and documented as thread-safe. Clearly document the locking strategy if manual locking is used.
+
+- **Documentation (Javadoc):**
+
+  - Write clear, comprehensive Javadoc comments (`/** ... */`) for all public and protected classes, interfaces, methods, constructors, enums, and constants.
+  - Explain the _purpose_ of the element.
+  - Use `@param` to describe each parameter.
+  - Use `@return` to describe the return value (and conditions for different return values).
+  - Use `@throws` to document every checked exception and any critical runtime exceptions the caller should be aware of.
+  - Add inline comments (`//`) to explain complex, non-obvious algorithms or logic within method bodies.
+
+- **Testing (JUnit 5):**
+
+  - Write thorough unit tests for all non-trivial logic.
+  - Test public API contracts, edge cases, boundary conditions, and error handling paths.
+  - Use mocking frameworks (e.g., Mockito) to isolate the unit under test from its dependencies.
+  - Aim for high test coverage, verified by coverage tools if possible.
+
+- **Static Analysis & Code Style:**
+
+  - Adhere strictly to the Checkstyle and PMD rules configured in `build.gradle.kts`. Run `gradlew check` regularly and fix violations promptly.
+  - Follow standard Java Naming Conventions (e.g., `UpperCamelCase` for classes/interfaces, `lowerCamelCase` for methods/variables, `UPPER_SNAKE_CASE` for constants).
+  - Maintain consistent code formatting (auto-format using IDE settings aligned with Checkstyle).
+
+- **Modularity:**
+
+  - Keep classes and methods focused on a single responsibility (Single Responsibility Principle).
+  - Design clear, minimal APIs (interfaces, public methods) between packages/modules. Minimize coupling.
+
+- **Avoid Magic Values:**
+
+  - Use named constants (`static final`) instead of embedding literal strings or numbers directly in the code, especially if they are used more than once or their meaning isn't immediately obvious.
+
+- **Logging:**
+  - Use a standard logging framework (e.g., SLF4j facade with Logback or Log4j2 implementation) for application logging. Avoid `System.out.println()` or `System.err.println()` for logging purposes.
+  - Configure appropriate logging levels (e.g., DEBUG, INFO, WARN, ERROR) for different environments. Log meaningful messages, including relevant context.
