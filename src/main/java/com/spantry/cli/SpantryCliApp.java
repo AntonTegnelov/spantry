@@ -1,56 +1,30 @@
 package com.spantry.cli;
 
-import com.spantry.cli.command.ItemCommands;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+// import com.spantry.cli.command.ItemCommands; // Will be added later
 
 /**
- * Main entry point for the Spantry CLI application using picocli.
- * This class acts as the root command and defines subcommands.
- * It will also be part of the Composition Root, responsible for
- * wiring dependencies (like InventoryService) into the commands.
- * // TODO: Implement dependency wiring (manual DI).
- * // TODO: Instantiate and pass InventoryService to commands.
+ * The main command-line application class for Spantry.
+ * It serves as the entry point and aggregates subcommands.
  */
 @Command(name = "spantry", mixinStandardHelpOptions = true,
-        version = "Spantry CLI 1.0",
-        description = "Manages your pantry inventory.",
-        subcommands = {
-                ItemCommands.class
-                // Add other top-level command groups here (e.g., RecipeCommands)
-        })
-public class SpantryCliApp implements Runnable { // Or Callable<Integer>
+         version = "Spantry CLI 1.0",
+         description = "Manages your pantry inventory.",
+         subcommands = {
+             // ItemCommands.class // Add inventory commands later
+         })
+public class SpantryCliApp implements Runnable {
 
-    // Picocli injects options and subcommands here
+    // Picocli injects options and parameters here if needed for the root command
 
     @Override
     public void run() {
-        // If the user runs the command without any subcommands,
-        // picocli automatically shows the usage help message
-        // because mixinStandardHelpOptions = true.
-        // You could add default behavior here if needed.
-        System.out.println("Use 'spantry help' for command list.");
+        // If the command is run without subcommands, print help
+        CommandLine.usage(this, System.out);
     }
 
-    // The Main method will likely instantiate this class, wire dependencies,
-    // and execute it using picocli's CommandLine.
-    // Example (in Main.java):
-    /*
-    public static void main(String[] args) {
-        // 1. Instantiate Dependencies (Composition Root)
-        InventoryRepository repository = new InMemoryInventoryRepository();
-        InventoryService service = new InventoryServiceImpl(repository);
-
-        // 2. Create Command Instance (potentially using a factory for DI)
-        SpantryCliApp app = new SpantryCliApp(); // Needs modification for DI
-        // A Picocli factory can be used to inject 'service' into subcommands
-        CommandLine cmd = new CommandLine(app, new DependencyFactory(service));
-
-        // 3. Execute
-        int exitCode = cmd.execute(args);
-        System.exit(exitCode);
-    }
-    */
+    // We might add dependency injection setup here later if not using a factory
 }
 
 // Example Picocli Factory for DI (can be inner class or separate)

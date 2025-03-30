@@ -56,7 +56,7 @@ checkstyle {
     toolVersion = "10.14.2"
     // Use Google's Checkstyle configuration as a base (will download if needed)
     // You can later create a custom config file like 'config/checkstyle/checkstyle.xml'
-    // configFile = file("config/checkstyle/checkstyle.xml")
+    configFile = resources.text.fromUri("https://raw.githubusercontent.com/checkstyle/checkstyle/checkstyle-10.14.2/src/main/resources/google_checks.xml").asFile()
     configProperties["checkstyle.cache.file"] = "${buildDir}/checkstyle.cache"
     isIgnoreFailures = false // Fail build on violations
     isShowViolations = true
