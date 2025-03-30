@@ -40,6 +40,26 @@ spotless {
     }
 }
 
+// Define e2eTest SourceSet FIRST
+sourceSets {
+    create("e2eTest") {
+        java.srcDirs("src/e2eTest/java")
+        resources.srcDirs("src/e2eTest/resources")
+        // Classpaths are handled via configurations and dependencies block
+    }
+}
+
+// Configure the implicitly created e2eTest configurations SECOND
+configurations {
+    getByName("e2eTestImplementation") {
+        extendsFrom(configurations.testImplementation.get())
+    }
+    getByName("e2eTestRuntimeOnly") {
+        extendsFrom(configurations.testRuntimeOnly.get())
+    }
+}
+
+// Define dependencies THIRD
 dependencies {
     // Add your project dependencies here
     // Example: testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
@@ -65,10 +85,15 @@ dependencies {
     implementation("org.slf4j:slf4j-api:2.0.12") // Use a recent 2.x version
     // Logging Implementation (Logback) - Needed for compiling test code (ListAppender)
     testImplementation("ch.qos.logback:logback-classic:1.4.14") // Corresponds to slf4j-api 2.x
+
+    // E2E Test Dependencies will be inherited via configurations
+    // Add dependency on test source set output for E2E tests (using string notation)
+    "e2eTestImplementation"(sourceSets.test.get().output)
 }
 
 application {
-    mainClass.set("com.spantry.Main") // Replace with your actual main class
+    // Updated main class name based on previous steps
+    mainClass.set("com.spantry.SpantryApplication")
 }
 
 tasks.test {
@@ -84,24 +109,19 @@ tasks.test {
 
 // Checkstyle configuration
 checkstyle {
-    // Use a recent Checkstyle version
     toolVersion = "10.14.2"
-    // Use Google's Checkstyle configuration as a base (will download if needed)
-    // You can later create a custom config file like 'config/checkstyle/checkstyle.xml'
     configFile =
         resources.text.fromUri(
             "https://raw.githubusercontent.com/checkstyle/checkstyle/checkstyle-10.14.2/src/main/resources/google_checks.xml",
         ).asFile()
     configProperties["checkstyle.cache.file"] = "$buildDir/checkstyle.cache"
-    isIgnoreFailures = false // Fail build on violations
+    isIgnoreFailures = false
     isShowViolations = true
 }
 
 // PMD configuration
 pmd {
-    // Use a recent PMD version
     toolVersion = "7.1.0"
-    // Define the rule sets to use (using built-in PMD rules)
     ruleSets =
         listOf(
             "category/java/bestpractices.xml",
@@ -112,15 +132,37 @@ pmd {
             "category/java/performance.xml",
             "category/java/security.xml",
         )
-    isIgnoreFailures = false // Fail build on violations
+    isIgnoreFailures = false
 }
 
-// Ensure the check task depends on checkstyle and pmd tasks
-// AND make check task depend on spotlessCheck for verification
+// Define e2eTest task
+tasks.register<Test>("e2eTest") {
+    description = "Runs end-to-end tests."
+    group = "verification"
+
+    testClassesDirs = sourceSets["e2eTest"].output.classesDirs
+    classpath = configurations.getByName("e2eTestRuntimeClasspath") + sourceSets["e2eTest"].output
+    useJUnitPlatform()
+
+    // Ensure application JAR is built before running E2E tests
+    dependsOn(tasks.jar)
+
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+
+    // Ensure E2E tests always run
+    outputs.upToDateWhen { false }
+
+    shouldRunAfter(tasks.test)
+}
+
+// Ensure the check task depends on static analysis AND e2eTest
 tasks.named("check") {
     dependsOn(tasks.withType<Checkstyle>())
     dependsOn(tasks.withType<Pmd>())
-    dependsOn(tasks.named("spotlessCheck")) // Add dependency on spotlessCheck
+    dependsOn(tasks.named("spotlessCheck"))
+    dependsOn(tasks.named("e2eTest"))
 }
 
 // Optional: Make spotlessApply run before compilation to auto-format
