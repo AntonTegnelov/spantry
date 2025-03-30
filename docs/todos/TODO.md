@@ -54,7 +54,7 @@ This document outlines the specific tasks for building the Spantry application, 
   - [x] This is the _only_ place where concrete implementation classes (like `InMemoryInventoryRepository`, `InventoryServiceImpl`) should be instantiated.
   - [x] Instantiate `InventoryRepository repo = new InMemoryInventoryRepository();`
   - [x] Instantiate `InventoryService service = new InventoryServiceImpl(repo);`
-  - [ ] Pass the `InventoryService` instance (the interface type!) to the CLI commands via their constructors or a setter method configured by picocli's factory.
+  - [x] Pass the `InventoryService` instance (the interface type!) to the CLI commands via their constructors or a setter method configured by picocli's factory.
 - **[Inventory Commands]** (`src/main/java/com/spantry/cli/command`)
   - [x] Create `ItemCommands.java` (e.g., annotated with `@Command(name = "item", subcommands = {AddItemCommand.class, ListItemsCommand.class, RemoveItemCommand.class})`).
   - [x] Implement `AddItemCommand.java` (`@Command(name = "add")`). Use `@Option` for parameters. Inject `InventoryService` (interface!) via constructor/factory. Call the appropriate service method.
@@ -68,3 +68,12 @@ This document outlines the specific tasks for building the Spantry application, 
   - [x] `AddItemCommand`: Call `inventoryService.addItem()`.
   - [x] `ListItemsCommand`: Call `inventoryService.getAllItems()`.
   - [x] `RemoveItemCommand`: Call `inventoryService.removeItem()`.
+
+## Phase 4: End-to-End Testing (CLI)
+
+- **[Strategy]**
+  - [ ] Decide on E2E testing strategy (e.g., shell scripts calling the JAR, Java test framework launching the process).
+- **[Tests]**
+  - [ ] Write E2E test for `item add` command: run the app, add an item, verify output (or potential state if observable).
+  - [ ] Write E2E test for `item list` command: run the app, add items, list them, verify output.
+  - [ ] Write E2E test for `item remove` command: run the app, add item, remove it, verify output/list again.

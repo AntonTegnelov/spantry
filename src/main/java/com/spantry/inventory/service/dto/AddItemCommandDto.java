@@ -16,7 +16,9 @@ import java.util.Optional;
  * @param location The storage location of the item (must not be null).
  * @param expirationDate The optional expiration date of the item.
  */
+@SuppressWarnings("MissingJavadocMethod") // Suppress for record components covered by @param
 public record AddItemCommandDto(
+    /** Item name (must not be blank). */
     @NotBlank(message = "Item name cannot be blank.") String name,
     @Positive(message = "Item quantity must be positive.") int quantity,
     @NotNull(message = "Item location cannot be null.") Location location,

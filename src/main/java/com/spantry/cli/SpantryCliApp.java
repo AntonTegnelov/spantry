@@ -1,8 +1,8 @@
 package com.spantry.cli;
 
 import com.spantry.cli.command.ItemCommands;
-import com.spantry.inventory.service.InventoryService;
-import java.util.Objects;
+// import com.spantry.inventory.service.InventoryService; // No longer needed here
+// import java.util.Objects; // No longer needed here
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
@@ -26,20 +26,14 @@ public class SpantryCliApp implements Runnable {
   // Field to hold the injected service (if needed directly by root command)
   // private final InventoryService inventoryService;
 
-  /** Constructor for Dependency Injection. Accepts the service interface. */
-  public SpantryCliApp(final InventoryService inventoryService) {
-    // Although the service isn't used directly here *yet*,
-    // we accept it to match the instantiation in SpantryApplication.
-    // If subcommands need it, Picocli usually requires a Factory.
-    // However, our current setup injects it into SpantryApplication,
-    // which could create a Factory or directly pass it if commands needed it.
-    // Let's keep this constructor simple for now as it resolves the compile error.
-    Objects.requireNonNull(inventoryService, "InventoryService cannot be null");
-    // this.inventoryService = inventoryService; // Assign if needed later
-  }
+  // Constructor accepting InventoryService is removed.
+  // Picocli will now use the default no-arg constructor for the root command.
+  // The DependencyFactory handles injection for subcommands.
 
-  // Default constructor removed/commented as it's not needed with the DI constructor
-  // public SpantryCliApp() { }
+  /** Default constructor. Required by PMD rule, otherwise compiler-generated is fine. */
+  public SpantryCliApp() {
+    // No initialization needed here for the root command currently.
+  }
 
   @Override
   public void run() {
