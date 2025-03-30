@@ -2,52 +2,71 @@ package com.spantry.inventory.repository;
 
 import com.spantry.inventory.domain.Item;
 import com.spantry.inventory.domain.Location;
-
+import java.util.Collections;
 import java.util.List;
-import java.util.Map; // Placeholder for internal storage
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap; // Potential internal storage
-import java.util.stream.Collectors;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
- * An in-memory implementation of the InventoryRepository.
- * Stores items in a map. Data is lost when the application stops.
- * This is an IMPLEMENTATION DETAIL and should not be directly referenced
- * by components outside the composition root.
- * // TODO: Implement the interface methods using a Map (e.g., ConcurrentHashMap).
- * // TODO: Handle ID generation (e.g., UUID.randomUUID()).
+ * An in-memory implementation of the {@link InventoryRepository}.
+ * Stores items in a ConcurrentHashMap. Data is lost when the application stops.
+ * This implementation handles ID generation using UUID.
  */
 public class InMemoryInventoryRepository implements InventoryRepository {
 
-    private final Map<String, Item> items = new ConcurrentHashMap<>(); // Example storage
+    // Using ConcurrentHashMap for thread safety, although not strictly needed for initial CLI
+    private final Map<String, Item> inventory = new ConcurrentHashMap<>();
 
     @Override
     public Item save(Item item) {
-        // TODO: Implement save logic (generate ID if new, update if exists)
-        return null; // Placeholder
+        Objects.requireNonNull(item, "Item cannot be null for saving");
+
+        String id = item.getId();
+        Item itemToSave;
+
+        // If item has no ID, generate one. If it has one, use it (update scenario).
+        if (id == null || id.isBlank()) {
+            id = UUID.randomUUID().toString();
+            // Create a new Item instance with the generated ID
+            itemToSave = new Item(id, item.getName(), item.getQuantity(), item.getLocation(), item.getExpirationDate());
+        } else {
+            // Use the existing item instance if ID was provided (update)
+            itemToSave = item;
+        }
+
+        inventory.put(itemToSave.getId(), itemToSave);
+        return itemToSave;
     }
 
     @Override
     public Optional<Item> findById(String id) {
-        // TODO: Implement findById logic
-        return Optional.empty(); // Placeholder
+        Objects.requireNonNull(id, "ID cannot be null for findById");
+        return Optional.ofNullable(inventory.get(id));
     }
 
     @Override
     public List<Item> findAll() {
-        // TODO: Implement findAll logic
-        return List.of(); // Placeholder
+        // Return an unmodifiable list to prevent external modification
+        return inventory.values().stream()
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
     public void deleteById(String id) {
-        // TODO: Implement deleteById logic
+        Objects.requireNonNull(id, "ID cannot be null for deleteById");
+        inventory.remove(id);
     }
 
     @Override
     public List<Item> findByLocation(Location location) {
-        // TODO: Implement findByLocation logic
-        return List.of(); // Placeholder
+        Objects.requireNonNull(location, "Location cannot be null for findByLocation");
+        // Return an unmodifiable list
+        return inventory.values().stream()
+                .filter(item -> item.getLocation() == location)
+                .collect(Collectors.toUnmodifiableList());
     }
 } 

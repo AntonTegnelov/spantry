@@ -37,11 +37,11 @@ This document outlines the specific tasks for building the Spantry application, 
   - [x] Define `InventoryRepository` interface (`InventoryRepository.java`) - Methods: `save(Item item)`, `findById(String id)`, `findAll()`, `deleteById(String id)`, `findByLocation(Location location)`. Defines the _contract_ for persistence.
   - [x] Define `InventoryService` interface (`InventoryService.java`) - Methods define _use cases_: `addItem(AddItemCommand cmd)`, `getAllItems()`, `getItemsByLocation(Location location)`, `removeItem(String itemId)`. (Consider using Command objects or simple DTOs for input to avoid primitive obsession).
   - [x] Define simple DTOs/Command objects if needed for the Service interface (e.g., `AddItemCommand.java`) to enhance decoupling by preventing domain object details from leaking into the public API.
-  - [ ] Consider defining custom, specific exceptions (e.g., `ItemNotFoundException`) that the service layer can throw to represent business rule violations or failures.
+  - [x] Consider defining custom, specific exceptions (e.g., `ItemNotFoundException`) that the service layer can throw to represent business rule violations or failures.
 - **[Implementation - Persistence]** (`src/main/java/com/spantry/inventory/repository`)
-  - [ ] Implement `InMemoryInventoryRepository` (`InMemoryInventoryRepository.java`) - Implements `InventoryRepository`. Use a `Map<String, Item>` internally. Handle ID generation (e.g., `UUID.randomUUID().toString()`) as an implementation detail of this specific repository. _This class is an implementation detail._
+  - [x] Implement `InMemoryInventoryRepository` (`InMemoryInventoryRepository.java`) - Implements `InventoryRepository`. Use a `Map<String, Item>` internally. Handle ID generation (e.g., `UUID.randomUUID().toString()`) as an implementation detail of this specific repository. _This class is an implementation detail._
 - **[Implementation - Application Logic]** (`src/main/java/com/spantry/inventory/service`)
-  - [ ] Implement `InventoryServiceImpl` (`InventoryServiceImpl.java`) - Implements `InventoryService`. Inject `InventoryRepository` via constructor. Encapsulates application-specific logic (validation, coordinating repository, potentially throwing custom exceptions defined alongside the service interface).
+  - [x] Implement `InventoryServiceImpl` (`InventoryServiceImpl.java`) - Implements `InventoryService`. Inject `InventoryRepository` via constructor. Encapsulates application-specific logic (validation, coordinating repository, potentially throwing custom exceptions defined alongside the service interface).
 - **[Unit Tests]** (`src/test/java/com/spantry/inventory/`)
   - [ ] Write unit tests for `InventoryServiceImpl` (mock `InventoryRepository`). Test use cases and logic.
   - [ ] Write unit tests for `InMemoryInventoryRepository`. Test persistence logic.
