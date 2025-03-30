@@ -60,6 +60,11 @@ dependencies {
     implementation("org.hibernate.validator:hibernate-validator:8.0.1.Final")
     // Required for Hibernate Validator
     runtimeOnly("org.glassfish:jakarta.el:4.0.2")
+
+    // Logging Facade (SLF4j)
+    implementation("org.slf4j:slf4j-api:2.0.12") // Use a recent 2.x version
+    // Logging Implementation (Logback) - Needed for compiling test code (ListAppender)
+    testImplementation("ch.qos.logback:logback-classic:1.4.14") // Corresponds to slf4j-api 2.x
 }
 
 application {
@@ -83,8 +88,11 @@ checkstyle {
     toolVersion = "10.14.2"
     // Use Google's Checkstyle configuration as a base (will download if needed)
     // You can later create a custom config file like 'config/checkstyle/checkstyle.xml'
-    configFile = resources.text.fromUri("https://raw.githubusercontent.com/checkstyle/checkstyle/checkstyle-10.14.2/src/main/resources/google_checks.xml").asFile()
-    configProperties["checkstyle.cache.file"] = "${buildDir}/checkstyle.cache"
+    configFile =
+        resources.text.fromUri(
+            "https://raw.githubusercontent.com/checkstyle/checkstyle/checkstyle-10.14.2/src/main/resources/google_checks.xml",
+        ).asFile()
+    configProperties["checkstyle.cache.file"] = "$buildDir/checkstyle.cache"
     isIgnoreFailures = false // Fail build on violations
     isShowViolations = true
 }
@@ -94,25 +102,26 @@ pmd {
     // Use a recent PMD version
     toolVersion = "7.1.0"
     // Define the rule sets to use (using built-in PMD rules)
-    ruleSets = listOf(
-        "category/java/bestpractices.xml",
-        "category/java/codestyle.xml",
-        "category/java/design.xml",
-        "category/java/errorprone.xml",
-        "category/java/multithreading.xml",
-        "category/java/performance.xml",
-        "category/java/security.xml"
-    )
+    ruleSets =
+        listOf(
+            "category/java/bestpractices.xml",
+            "category/java/codestyle.xml",
+            "category/java/design.xml",
+            "category/java/errorprone.xml",
+            "category/java/multithreading.xml",
+            "category/java/performance.xml",
+            "category/java/security.xml",
+        )
     isIgnoreFailures = false // Fail build on violations
 }
 
 // Ensure the check task depends on checkstyle and pmd tasks
 // AND make check task depend on spotlessCheck for verification
-tasks.named("check") { 
-    dependsOn(tasks.withType<Checkstyle>()) 
-    dependsOn(tasks.withType<Pmd>()) 
+tasks.named("check") {
+    dependsOn(tasks.withType<Checkstyle>())
+    dependsOn(tasks.withType<Pmd>())
     dependsOn(tasks.named("spotlessCheck")) // Add dependency on spotlessCheck
-} 
+}
 
 // Optional: Make spotlessApply run before compilation to auto-format
 tasks.withType<JavaCompile>().configureEach {

@@ -1,123 +1,170 @@
 package com.spantry.cli.command;
 
-import com.spantry.inventory.domain.Item;
+import com.spantry.exception.InitializationException; // Added import
+import com.spantry.inventory.domain.InventoryItem; // Correct import
 import com.spantry.inventory.domain.Location; // Import Location enum
-import com.spantry.inventory.service.InventoryService; // Depends on the SERVICE INTERFACE
-import com.spantry.inventory.service.dto.AddItemCommandDto; // Import the DTO
+import com.spantry.inventory.service.InventoryService;
+import com.spantry.inventory.service.dto.AddItemCommandDto;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
-
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
-
 import java.time.LocalDate; // Import LocalDate
 import java.time.format.DateTimeParseException; // Import for date parsing errors
+import java.util.Objects;
 import java.util.Optional; // Import Optional
 import java.util.Set;
 import java.util.concurrent.Callable; // Using Callable for potential return codes
-import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
 /**
- * Picocli command to add a new item to the inventory.
- * // TODO: Define required Options (name, quantity, location, etc.)
- * // TODO: Inject InventoryService (constructor injection preferred via Picocli factory).
- * // TODO: Implement the call() method to invoke InventoryService.addItem.
- * // TODO: Add user feedback (success/error messages).
+ * Picocli command to add a new item to the inventory. // TODO: Define required Options (name,
+ * quantity, location, etc.) // TODO: Inject InventoryService (constructor injection preferred via
+ * Picocli factory). // TODO: Implement the call() method to invoke InventoryService.addItem. //
+ * TODO: Add user feedback (success/error messages).
  */
-@Command(name = "add",
-         description = "Adds a new item to the inventory.",
-         mixinStandardHelpOptions = true)
+@Command(
+    name = "add",
+    description = "Adds a new item to the inventory.",
+    mixinStandardHelpOptions = true)
+// Suppress specific PMD rule for the static initializer catch block
+@SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.CognitiveComplexity"})
 public class AddItemCommand implements Callable<Integer> {
 
-    private final InventoryService inventoryService;
-    private final Validator validator;
+  // Logger instance
+  private static final Logger LOG = LoggerFactory.getLogger(AddItemCommand.class);
 
-    // Constructor for Dependency Injection (used by Picocli factory)
-    public AddItemCommand(InventoryService inventoryService) {
-        this.inventoryService = Objects.requireNonNull(inventoryService, "inventoryService cannot be null");
-        // Initialize the validator
-        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
-            this.validator = factory.getValidator();
-        } catch (Exception e) {
-            // Handle validator initialization error (log or rethrow)
-            System.err.println("Error initializing validation framework: " + e.getMessage());
-            throw new RuntimeException("Failed to initialize validator", e);
-        }
+  private static final Validator VALIDATOR; // Renamed from validator
+  private final InventoryService inventoryService;
+
+  // --- Moved Command Line Options to the top ---
+  @Option(
+      names = {"-n", "--name"},
+      required = true,
+      description = "Name of the item.")
+  private String name;
+
+  @Option(
+      names = {"-q", "--quantity"},
+      required = true,
+      description = "Quantity of the item.")
+  private int quantity;
+
+  @Option(
+      names = {"-l", "--location"},
+      required = true,
+      description = "Storage location (e.g., PANTRY, FRIDGE, FREEZER).")
+  private Location location; // Picocli automatically converts String to Enum
+
+  @Option(
+      names = {"-e", "--expires"},
+      description = "Expiration date (YYYY-MM-DD). Optional.")
+  private String expirationDateStr;
+
+  // --- End Moved Fields ---
+
+  // Static initializer block for the validator
+  static {
+    try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+      VALIDATOR = factory.getValidator();
+    } catch (jakarta.validation.ValidationException e) {
+      if (LOG.isErrorEnabled()) {
+        LOG.error("Critical: Failed to initialize validator: {}", e.getMessage(), e);
+      }
+      throw new InitializationException("Failed to initialize validation framework", e);
+    } catch (RuntimeException e) {
+      if (LOG.isErrorEnabled()) {
+        LOG.error(
+            "Critical: Unexpected runtime error initializing validator: {}", e.getMessage(), e);
+      }
+      throw new InitializationException("Unexpected error initializing validation framework", e);
     }
+  }
 
-    // --- Command Line Options ---
+  /**
+   * Constructor for Dependency Injection (used by Picocli factory).
+   *
+   * @param inventoryService The service instance to inject.
+   */
+  public AddItemCommand(final InventoryService inventoryService) {
+    this.inventoryService =
+        Objects.requireNonNull(inventoryService, "inventoryService cannot be null");
+    // Validator initialization is now handled in the static block
+  }
 
-    @Option(names = {"-n", "--name"}, required = true, description = "Name of the item.")
-    private String name;
+  // --- Command Line Options (Moved Above) ---
 
-    @Option(names = {"-q", "--quantity"}, required = true, description = "Quantity of the item.")
-    private int quantity;
+  // --- Callable Implementation ---
 
-    @Option(names = {"-l", "--location"}, required = true, description = "Storage location (e.g., PANTRY, FRIDGE, FREEZER).")
-    private Location location; // Picocli automatically converts String to Enum
+  @Override
+  // Remove suppression from here as it's now on the class
+  // @SuppressWarnings({"PMD.CognitiveComplexity", "PMD.AvoidCatchingGenericException"})
+  public Integer call() {
+    int exitCode = 0; // Default to success
+    final Optional<LocalDate> expDate = parseExpirationDate();
 
-    @Option(names = {"-e", "--expires"}, description = "Expiration date (YYYY-MM-DD). Optional.")
-    private String expirationDateStr;
+    if (expirationDateStr != null && expDate.isEmpty()) {
+      // Error already logged by parseExpirationDate()
+      exitCode = 1;
+    } else {
+      // Create DTO only if date parsing was successful (or date wasn't provided)
+      final AddItemCommandDto commandDto = new AddItemCommandDto(name, quantity, location, expDate);
 
-    // --- Callable Implementation ---
-
-    @Override
-    public Integer call() {
-        Optional<LocalDate> expirationDate = parseExpirationDate();
-        if (expirationDateStr != null && expirationDate.isEmpty()) {
-            // Error message already printed by parseExpirationDate
-            return 1; // Indicate error
-        }
-
-        // Create DTO from command line args
-        AddItemCommandDto commandDto = new AddItemCommandDto(name, quantity, location, expirationDate);
-
-        // Validate the DTO
-        Set<ConstraintViolation<AddItemCommandDto>> violations = validator.validate(commandDto);
-        if (!violations.isEmpty()) {
-            System.err.println("Error: Invalid item data:");
-            for (ConstraintViolation<AddItemCommandDto> violation : violations) {
-                System.err.println("  - " + violation.getMessage());
-            }
-            return 1; // Indicate validation error
-        }
-
+      // Validate the DTO
+      final Set<ConstraintViolation<AddItemCommandDto>> violations = VALIDATOR.validate(commandDto);
+      if (violations.isEmpty()) {
+        // Proceed only if validation passed
         try {
-            // Call the service layer
-            Item addedItem = inventoryService.addItem(commandDto);
-
-            // Provide user feedback
-            System.out.println("Successfully added item:");
-            System.out.println("  ID: " + addedItem.getId());
-            System.out.println("  Name: " + addedItem.getName());
-            System.out.println("  Quantity: " + addedItem.getQuantity());
-            System.out.println("  Location: " + addedItem.getLocation());
-            addedItem.getExpirationDate().ifPresent(date -> System.out.println("  Expires: " + date));
-
-            return 0; // Indicate success
-        } catch (Exception e) {
-            // Catch any unexpected errors during service call or processing
-            System.err.println("An unexpected error occurred while adding the item:");
-            e.printStackTrace(); // Print stack trace for debugging
-            return 1; // Indicate failure
+          final InventoryItem addedItem = inventoryService.addItem(commandDto);
+          if (LOG.isInfoEnabled()) {
+            LOG.info("Successfully added item:");
+            LOG.info("  ID: {}", addedItem.getItemId());
+            LOG.info("  Name: {}", addedItem.getName());
+            LOG.info("  Quantity: {}", addedItem.getQuantity());
+            LOG.info("  Location: {}", addedItem.getLocation());
+            addedItem.getExpirationDate().ifPresent(date -> LOG.info("  Expires: {}", date));
+          }
+          // exitCode remains 0 (success)
+        } catch (RuntimeException e) { // Catching RuntimeException at command boundary is okay
+          if (LOG.isErrorEnabled()) {
+            LOG.error("An unexpected error occurred while adding the item: {}", e.getMessage(), e);
+          }
+          exitCode = 1;
         }
+      } else {
+        // Validation failed
+        if (LOG.isErrorEnabled()) {
+          LOG.error("Error: Invalid item data:");
+          for (final ConstraintViolation<AddItemCommandDto> violation : violations) {
+            LOG.error("  - {}", violation.getMessage());
+          }
+        }
+        exitCode = 1;
+      }
     }
+    return exitCode; // Single return point
+  }
 
-    /**
-     * Parses the expiration date string into an Optional<LocalDate>.
-     * Prints error message and returns empty Optional if parsing fails.
-     */
-    private Optional<LocalDate> parseExpirationDate() {
-        if (expirationDateStr == null || expirationDateStr.isBlank()) {
-            return Optional.empty();
+  /**
+   * Parses the expiration date string. Returns empty Optional on error.
+   *
+   * @return Optional containing the parsed {@link LocalDate} or empty.
+   */
+  private Optional<LocalDate> parseExpirationDate() {
+    Optional<LocalDate> resultExpDate = Optional.empty();
+    if (expirationDateStr != null && !expirationDateStr.isBlank()) {
+      try {
+        resultExpDate = Optional.of(LocalDate.parse(expirationDateStr));
+      } catch (DateTimeParseException e) {
+        if (LOG.isErrorEnabled()) {
+          LOG.error("Error: Invalid date format '{}'. Please use YYYY-MM-DD.", expirationDateStr);
         }
-        try {
-            return Optional.of(LocalDate.parse(expirationDateStr));
-        } catch (DateTimeParseException e) {
-            System.err.println("Error: Invalid date format for expiration date. Please use YYYY-MM-DD.");
-            return Optional.empty();
-        }
+        // result remains empty
+      }
     }
-} 
+    return resultExpDate; // Single return point
+  }
+}

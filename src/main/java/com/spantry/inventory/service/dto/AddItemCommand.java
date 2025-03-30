@@ -5,31 +5,31 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 /**
- * Data Transfer Object (DTO) representing the command to add a new item.
- * Using a DTO helps decouple the service layer input from the domain model
- * and provides a clear contract for the `addItem` use case.
+ * Data Transfer Object (DTO) representing the command to add a new item. Using a DTO helps decouple
+ * the service layer input from the domain model and provides a clear contract for the `addItem` use
+ * case.
  *
- * We use a record for simplicity and immutability.
+ * <p>We use a record for simplicity and immutability.
  */
 public record AddItemCommand(
-    String name,           // Non-null
-    int quantity,          // Non-negative
-    Location location,     // Non-null
+    String name, // Non-null
+    int quantity, // Non-negative
+    Location location, // Non-null
     Optional<LocalDate> expirationDate // Optional, Non-null Optional object itself
-) {
-    // Compact constructor for validation (optional but good practice)
-    public AddItemCommand {
-        if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Item name cannot be null or blank");
-        }
-        if (quantity < 0) {
-            throw new IllegalArgumentException("Quantity cannot be negative: " + quantity);
-        }
-        if (location == null) {
-            throw new IllegalArgumentException("Location cannot be null");
-        }
-        if (expirationDate == null) {
-            throw new IllegalArgumentException("Expiration date Optional cannot be null");
-        }
+    ) {
+  // Compact constructor for validation (optional but good practice)
+  public AddItemCommand {
+    if (name == null || name.isBlank()) {
+      throw new IllegalArgumentException("Item name cannot be null or blank");
     }
-} 
+    if (quantity < 0) {
+      throw new IllegalArgumentException("Quantity cannot be negative: " + quantity);
+    }
+    if (location == null) {
+      throw new IllegalArgumentException("Location cannot be null");
+    }
+    if (expirationDate == null) {
+      throw new IllegalArgumentException("Expiration date Optional cannot be null");
+    }
+  }
+}

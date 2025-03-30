@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- Console Appender -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- Pattern includes timestamp, level, thread, logger name, message, and newline -->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Root Logger Configuration -->
+    <!-- Set the default logging level for the entire application -->
+    <!-- Common levels: TRACE, DEBUG, INFO, WARN, ERROR -->
+    <root level="INFO">
+        <!-- Attach the console appender to the root logger -->
+        <appender-ref ref="STDOUT" />
+    </root>
+
+    <!-- Optional: Configure logging level for specific packages -->
+    <!-- Example: Set com.spantry to DEBUG level -->
+    <!--
+    <logger name="com.spantry" level="DEBUG" additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
+    -->
+
+</configuration> 
