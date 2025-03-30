@@ -72,7 +72,8 @@ These conventions guide AI-assisted development for the Spantry project, priorit
 
   - Write thorough unit tests for all non-trivial logic.
   - Test public API contracts, edge cases, boundary conditions, and error handling paths.
-  - Use mocking frameworks (e.g., Mockito) to isolate the unit under test from its dependencies.
+  - Minimize the use of mocking, only mock when neccesssary
+  - Focus on integration testing
   - Aim for high test coverage, verified by coverage tools if possible.
 
 - **Static Analysis & Code Style:**
@@ -93,3 +94,10 @@ These conventions guide AI-assisted development for the Spantry project, priorit
 - **Logging:**
   - Use a standard logging framework (e.g., SLF4j facade with Logback or Log4j2 implementation) for application logging. Avoid `System.out.println()` or `System.err.println()` for logging purposes.
   - Configure appropriate logging levels (e.g., DEBUG, INFO, WARN, ERROR) for different environments. Log meaningful messages, including relevant context.
+
+- **SOLID:**
+  - SRP: Keep classes and methods focused on a single responsibility.
+  - OCP: Design for extension (e.g., adding new report types) without modifying existing code where possible.
+  - LSP: Ensure subtypes can substitute base types (relevant if using inheritance).
+  - ISP: Define small, focused interfaces (Interface Segregation Principle). Avoid large "god" interfaces.
+  - DIP: Depend on abstractions (interfaces), not concretions (Dependency Inversion Principle). Inject dependencies.

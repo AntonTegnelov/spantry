@@ -26,20 +26,19 @@ public class InMemoryInventoryRepository implements InventoryRepository {
         Objects.requireNonNull(item, "Item cannot be null for saving");
 
         String id = item.getId();
-        Item itemToSave;
+        Item itemToStore;
 
-        // If item has no ID, generate one. If it has one, use it (update scenario).
         if (id == null || id.isBlank()) {
+            // Generate ID and create the final Item object to be stored and returned
             id = UUID.randomUUID().toString();
-            // Create a new Item instance with the generated ID
-            itemToSave = new Item(id, item.getName(), item.getQuantity(), item.getLocation(), item.getExpirationDate());
+            itemToStore = new Item(id, item.getName(), item.getQuantity(), item.getLocation(), item.getExpirationDate());
         } else {
-            // Use the existing item instance if ID was provided (update)
-            itemToSave = item;
+            // Use the provided item directly if it already has an ID (update scenario)
+            itemToStore = item;
         }
 
-        inventory.put(itemToSave.getId(), itemToSave);
-        return itemToSave;
+        inventory.put(itemToStore.getId(), itemToStore);
+        return itemToStore; // Return the potentially new item instance with the generated ID
     }
 
     @Override

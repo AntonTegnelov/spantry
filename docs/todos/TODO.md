@@ -43,7 +43,7 @@ This document outlines the specific tasks for building the Spantry application, 
 - **[Implementation - Application Logic]** (`src/main/java/com/spantry/inventory/service`)
   - [x] Implement `InventoryServiceImpl` (`InventoryServiceImpl.java`) - Implements `InventoryService`. Inject `InventoryRepository` via constructor. Encapsulates application-specific logic (validation, coordinating repository, potentially throwing custom exceptions defined alongside the service interface).
 - **[Unit Tests]** (`src/test/java/com/spantry/inventory/`)
-  - [ ] Write unit tests for `InventoryServiceImpl` (mock `InventoryRepository`). Test use cases and logic.
+  - [x] Write unit tests for `InventoryServiceImpl` (mock `InventoryRepository`). Test use cases and logic.
   - [ ] Write unit tests for `InMemoryInventoryRepository`. Test persistence logic.
 
 ## Phase 3: Command-Line Interface (`com.spantry.cli` & `com.spantry.Main`)

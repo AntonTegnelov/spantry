@@ -27,6 +27,10 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
 
+    // Mocking for tests
+    testImplementation("org.mockito:mockito-core:5.11.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.11.0")
+
     // CLI Argument Parsing
     implementation("info.picocli:picocli:4.7.6")
 }
@@ -37,6 +41,13 @@ application {
 
 tasks.test {
     useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed", "standard_out", "standard_error")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        showStandardStreams = true
+        showStackTraces = true
+        showCauses = true
+    }
 }
 
 // Checkstyle configuration
