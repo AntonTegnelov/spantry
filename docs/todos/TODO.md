@@ -72,7 +72,7 @@ This document outlines the specific tasks for building the Spantry application, 
 ## Phase 4: End-to-End Testing (CLI)
 
 - **[Strategy]**
-  - [ ] Decide on E2E testing strategy (e.g., shell scripts calling the JAR, Java test framework launching the process).
+  - [x] Chosen Strategy: Use JUnit 5 test framework to launch the application JAR/process and assert standard output/error streams.
 - **[Tests]**
   - [ ] Write E2E test for `item add` command: run the app, add an item, verify output (or potential state if observable).
   - [ ] Write E2E test for `item list` command: run the app, add items, list them, verify output.
