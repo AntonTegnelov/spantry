@@ -1,0 +1,21 @@
+<configuration>
+
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <!-- encoders are assigned the type
+         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+    <encoder>
+      <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <root level="WARN">
+    <appender-ref ref="STDOUT" />
+  </root>
+
+  <!-- Suppress WARN logs from service during E2E tests to avoid clutter -->
+  <logger name="com.spantry.inventory.service.InventoryServiceImpl" level="ERROR"/>
+
+  <!-- Optional: Set specific loggers to different levels if needed -->
+  <!-- Example: <logger name="com.spantry.inventory.service" level="INFO"/> -->
+
+</configuration> 

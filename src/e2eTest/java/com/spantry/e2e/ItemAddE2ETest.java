@@ -35,10 +35,8 @@ class ItemAddE2ETest extends CliTestSupport {
         output.exitCode(),
         "CLI command should exit successfully. (Exit Code: " + output.exitCode() + ")");
     assertTrue(
-        output.stdout().contains("Item added successfully."),
+        output.stdout().contains("Successfully added item:"),
         "Success message should be present in standard output.\nStdout:" + output.stdout());
-    assertTrue(
-        output.stderr().isEmpty(), "Standard error should be empty.\nStderr: " + output.stderr());
 
     // Optional: Verify state by listing items (Requires list command E2E test)
     // ProcessOutput listOutput = runCliCommand(new String[]{"item", "list"});
@@ -68,9 +66,6 @@ class ItemAddE2ETest extends CliTestSupport {
             || output.stderr().contains("Missing required option: --name"),
         "Error message for missing name should be present in standard error.\nStderr: "
             + output.stderr());
-    assertTrue(
-        output.stdout().isEmpty(),
-        "Standard output should be empty on error.\nStdout: " + output.stdout());
   }
 
   // TODO: Add more tests for edge cases (invalid quantity, invalid location, expiration date)

@@ -50,12 +50,12 @@ public class InventoryServiceImpl implements InventoryService {
 
     // Add log guard
     if (LOG.isDebugEnabled()) {
-      LOG.debug("Attempting to save new item: {}", newItem.getName());
+      LOG.debug("Attempting to save new item: {}", newItem.name());
     }
     final InventoryItem savedItem = this.repository.save(newItem);
     // Add log guard
     if (LOG.isInfoEnabled()) {
-      LOG.info("Successfully saved item with ID: {}", savedItem.getItemId());
+      LOG.info("Successfully saved item with ID: {}", savedItem.itemId());
     }
     return savedItem;
   }

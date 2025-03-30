@@ -45,11 +45,9 @@ class InventoryServiceImplTest {
   void setUp() {
     // Removed manual initialization
     // Reusable test data
-    sampleItem1 = new InventoryItem("id1", "Apple", 5, Location.PANTRY, Optional.empty());
-    sampleItem2 =
-        new InventoryItem(
-            "id2", "Milk", 1, Location.FRIDGE, Optional.of(LocalDate.now().plusDays(7)));
-    sampleAddCommandDto = new AddItemCommandDto("Banana", 3, Location.COUNTER, Optional.empty());
+    sampleItem1 = new InventoryItem("id1", "Apple", 5, Location.PANTRY, null);
+    sampleItem2 = new InventoryItem("id2", "Milk", 1, Location.FRIDGE, LocalDate.now().plusDays(7));
+    sampleAddCommandDto = new AddItemCommandDto("Banana", 3, Location.COUNTER, null);
   }
 
   @Test
@@ -71,8 +69,8 @@ class InventoryServiceImplTest {
 
     // Assert
     assertNotNull(result); // Check result is not null
-    assertEquals(savedItem.getItemId(), result.getItemId());
-    assertEquals(sampleAddCommandDto.name(), result.getName());
+    assertEquals(savedItem.itemId(), result.itemId());
+    assertEquals(sampleAddCommandDto.name(), result.name());
 
     // Verify repository.save was called
     verify(mockInventoryRepository, times(1)).save(any(InventoryItem.class));
@@ -111,7 +109,7 @@ class InventoryServiceImplTest {
   @Test
   void removeItem_whenItemExists_shouldCallRepositoryDelete() {
     // Arrange
-    String itemIdToRemove = sampleItem1.getItemId();
+    String itemIdToRemove = sampleItem1.itemId();
     // Simulate findById returning the item, indicating it exists
     when(mockInventoryRepository.findById(itemIdToRemove)).thenReturn(Optional.of(sampleItem1));
 

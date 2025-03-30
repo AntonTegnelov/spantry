@@ -1,7 +1,9 @@
 package com.spantry.inventory.domain;
 
+import java.io.Serializable;
+
 /** Represents potential locations for storing items. */
-public enum Location {
+public enum Location implements Serializable {
   PANTRY,
   FRIDGE,
   FREEZER,

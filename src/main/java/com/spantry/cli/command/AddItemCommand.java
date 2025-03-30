@@ -12,7 +12,6 @@ import jakarta.validation.ValidatorFactory;
 import java.time.LocalDate; // Import LocalDate
 import java.time.format.DateTimeParseException; // Import for date parsing errors
 import java.util.Objects;
-import java.util.Optional; // Import Optional
 import java.util.Set;
 import java.util.concurrent.Callable; // Using Callable for potential return codes
 import org.slf4j.Logger;
@@ -104,13 +103,14 @@ public class AddItemCommand implements Callable<Integer> {
   // @SuppressWarnings({"PMD.CognitiveComplexity", "PMD.AvoidCatchingGenericException"})
   public Integer call() {
     int exitCode = 0; // Default to success
-    final Optional<LocalDate> expDate = parseExpirationDate();
+    final LocalDate expDate = parseExpirationDate(); // Now returns LocalDate or null
 
-    if (expirationDateStr != null && expDate.isEmpty()) {
+    // Check if parsing failed (indicated by non-null input string but null result date)
+    if (expirationDateStr != null && !expirationDateStr.isBlank() && expDate == null) {
       // Error already logged by parseExpirationDate()
       exitCode = 1;
     } else {
-      // Create DTO only if date parsing was successful (or date wasn't provided)
+      // Create DTO with potentially null LocalDate
       final AddItemCommandDto commandDto = new AddItemCommandDto(name, quantity, location, expDate);
 
       // Validate the DTO
@@ -121,17 +121,17 @@ public class AddItemCommand implements Callable<Integer> {
           final InventoryItem addedItem = inventoryService.addItem(commandDto);
           if (LOG.isInfoEnabled()) {
             LOG.info("Successfully added item:");
-            LOG.info("  ID: {}", addedItem.getItemId());
-            LOG.info("  Name: {}", addedItem.getName());
-            LOG.info("  Quantity: {}", addedItem.getQuantity());
-            LOG.info("  Location: {}", addedItem.getLocation());
-            addedItem.getExpirationDate().ifPresent(date -> LOG.info("  Expires: {}", date));
+            LOG.info("  ID: {}", addedItem.itemId());
+            LOG.info("  Name: {}", addedItem.name());
+            LOG.info("  Quantity: {}", addedItem.quantity());
+            LOG.info("  Location: {}", addedItem.location());
+            // Use the optional getter for logging
+            addedItem
+                .getExpirationDateOptional()
+                .ifPresent(date -> LOG.info("  Expires: {}", date));
           }
-          // exitCode remains 0 (success)
-        } catch (RuntimeException e) { // Catching RuntimeException at command boundary is okay
-          if (LOG.isErrorEnabled()) {
-            LOG.error("An unexpected error occurred while adding the item: {}", e.getMessage(), e);
-          }
+        } catch (RuntimeException e) {
+          LOG.error("An unexpected error occurred while adding the item: {}", e.getMessage(), e);
           exitCode = 1;
         }
       } else {
@@ -149,22 +149,22 @@ public class AddItemCommand implements Callable<Integer> {
   }
 
   /**
-   * Parses the expiration date string. Returns empty Optional on error.
+   * Parses the expiration date string. Returns null on error or if input is null/blank.
    *
-   * @return Optional containing the parsed {@link LocalDate} or empty.
+   * @return Parsed {@link LocalDate} or null.
    */
-  private Optional<LocalDate> parseExpirationDate() {
-    Optional<LocalDate> resultExpDate = Optional.empty();
+  private LocalDate parseExpirationDate() { // Return type changed
+    LocalDate resultExpDate = null; // Default to null
     if (expirationDateStr != null && !expirationDateStr.isBlank()) {
       try {
-        resultExpDate = Optional.of(LocalDate.parse(expirationDateStr));
+        resultExpDate = LocalDate.parse(expirationDateStr);
       } catch (DateTimeParseException e) {
         if (LOG.isErrorEnabled()) {
           LOG.error("Error: Invalid date format '{}'. Please use YYYY-MM-DD.", expirationDateStr);
         }
-        // result remains empty
+        // result remains null
       }
     }
-    return resultExpDate; // Single return point
+    return resultExpDate;
   }
 }

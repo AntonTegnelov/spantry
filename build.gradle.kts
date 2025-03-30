@@ -45,11 +45,14 @@ sourceSets {
     create("e2eTest") {
         java.srcDirs("src/e2eTest/java")
         resources.srcDirs("src/e2eTest/resources")
-        // Classpaths are handled via configurations and dependencies block
+        // Explicitly set compile and runtime classpaths // Reverting this approach
+        // compileClasspath += sourceSets.main.get().output + sourceSets.test.get().output + configurations.testCompileClasspath.get()
+        // runtimeClasspath += sourceSets.main.get().output + sourceSets.test.get().output + configurations.testRuntimeClasspath.get()
     }
 }
 
 // Configure the implicitly created e2eTest configurations SECOND
+// Re-instate extendsFrom
 configurations {
     getByName("e2eTestImplementation") {
         extendsFrom(configurations.testImplementation.get())
@@ -83,17 +86,34 @@ dependencies {
 
     // Logging Facade (SLF4j)
     implementation("org.slf4j:slf4j-api:2.0.12") // Use a recent 2.x version
-    // Logging Implementation (Logback) - Needed for compiling test code (ListAppender)
-    testImplementation("ch.qos.logback:logback-classic:1.4.14") // Corresponds to slf4j-api 2.x
+    // Logging Implementation (Logback)
+    runtimeOnly("ch.qos.logback:logback-classic:1.4.14") // Added for runtime
+    testImplementation("ch.qos.logback:logback-classic:1.4.14") // Kept for ListAppender in tests
 
-    // E2E Test Dependencies will be inherited via configurations
-    // Add dependency on test source set output for E2E tests (using string notation)
+    // E2E Test Dependencies
+    // Explicitly depend on main and test outputs for E2E compile time
+    "e2eTestImplementation"(sourceSets.main.get().output)
     "e2eTestImplementation"(sourceSets.test.get().output)
+    // Runtime dependencies should be covered by extendsFrom above
 }
 
 application {
     // Updated main class name based on previous steps
     mainClass.set("com.spantry.SpantryApplication")
+}
+
+// Configure the default JAR task to include the Main-Class and Class-Path manifest attributes
+tasks.jar {
+    manifest {
+        attributes(
+            "Main-Class" to application.mainClass.get(),
+            // Add runtime classpath to manifest. Relative paths assume JAR and libs are in the same dir.
+            // If JAR is in build/libs, paths should be relative to that.
+            "Class-Path" to configurations.runtimeClasspath.get().files.joinToString(" ") { "../libs/${it.name}" }, // Adjust path if needed
+            // A simpler approach if JAR and libs ARE in the same dir (e.g., in a distribution):
+            // "Class-Path" to configurations.runtimeClasspath.get().files.joinToString(" ") { it.name }
+        )
+    }
 }
 
 tasks.test {
@@ -144,8 +164,8 @@ tasks.register<Test>("e2eTest") {
     classpath = configurations.getByName("e2eTestRuntimeClasspath") + sourceSets["e2eTest"].output
     useJUnitPlatform()
 
-    // Ensure application JAR is built before running E2E tests
-    dependsOn(tasks.jar)
+    // Ensure application distribution is installed before running E2E tests
+    dependsOn(tasks.installDist)
 
     testLogging {
         events("passed", "skipped", "failed")
@@ -155,6 +175,11 @@ tasks.register<Test>("e2eTest") {
     outputs.upToDateWhen { false }
 
     shouldRunAfter(tasks.test)
+}
+
+// Configure handling for duplicate resources in e2eTest
+tasks.named<Copy>("processE2eTestResources") {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 // Ensure the check task depends on static analysis AND e2eTest
