@@ -44,7 +44,7 @@ public class InventoryServiceImpl implements InventoryService {
             command.expirationDate()
         );
 
-        System.out.println("[DEBUG] InventoryServiceImpl: Calling save with Item: " + newItem);
+        // System.out.println("[DEBUG] InventoryServiceImpl: Calling save with Item: " + newItem);
         return inventoryRepository.save(newItem);
     }
 

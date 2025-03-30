@@ -57,7 +57,6 @@ class InventoryServiceImplTest {
 
         // Act
         Item result = inventoryService.addItem(sampleAddCommand);
-        System.out.println("[DEBUG] Test: Result from addItem: " + result);
 
         // Assert
         assertNotNull(result); // Check result is not null
