@@ -65,6 +65,6 @@ This document outlines the specific tasks for building the Spantry application, 
   - [x] Instantiate `InventoryService` (`InventoryServiceImpl`) in `Main.java`, passing the repository.
   - [x] Wire `InventoryService` into Commands (e.g., using Picocli's `IFactory`).
 - **[Implement Command Logic]**
-  - [ ] `AddItemCommand`: Call `inventoryService.addItem()`.
-  - [ ] `ListItemsCommand`: Call `inventoryService.getAllItems()`.
-  - [ ] `RemoveItemCommand`: Call `inventoryService.removeItem()`.
+  - [x] `AddItemCommand`: Call `inventoryService.addItem()`.
+  - [x] `ListItemsCommand`: Call `inventoryService.getAllItems()`.
+  - [x] `RemoveItemCommand`: Call `inventoryService.removeItem()`.
