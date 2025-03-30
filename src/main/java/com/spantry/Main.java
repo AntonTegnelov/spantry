@@ -3,6 +3,8 @@ package com.spantry;
 import com.spantry.cli.SpantryCliApp;
 import com.spantry.inventory.repository.InMemoryInventoryRepository;
 import com.spantry.inventory.repository.InventoryRepository;
+import com.spantry.inventory.service.InventoryService;
+import com.spantry.inventory.service.InventoryServiceImpl;
 import picocli.CommandLine;
 
 /**
@@ -18,7 +20,7 @@ public class Main {
         // === Composition Root ===
         // Instantiate concrete implementations
         InventoryRepository repository = new InMemoryInventoryRepository();
-        // InventoryService service = new InventoryServiceImpl(repository); // Instantiate service in next step
+        InventoryService service = new InventoryServiceImpl(repository);
 
         // Instantiate the CLI application
         SpantryCliApp app = new SpantryCliApp();

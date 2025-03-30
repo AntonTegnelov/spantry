@@ -53,7 +53,7 @@ This document outlines the specific tasks for building the Spantry application, 
 - **[Composition Root / Manual DI Wiring]** (`src/main/java/com/spantry/Main.java` or `SpantryCliApp.java`)
   - [x] This is the _only_ place where concrete implementation classes (like `InMemoryInventoryRepository`, `InventoryServiceImpl`) should be instantiated.
   - [x] Instantiate `InventoryRepository repo = new InMemoryInventoryRepository();`
-  - [ ] Instantiate `InventoryService service = new InventoryServiceImpl(repo);`
+  - [x] Instantiate `InventoryService service = new InventoryServiceImpl(repo);`
   - [ ] Pass the `InventoryService` instance (the interface type!) to the CLI commands via their constructors or a setter method configured by picocli's factory.
 - **[Inventory Commands]** (`src/main/java/com/spantry/cli/command`)
   - [ ] Create `ItemCommands.java` (e.g., annotated with `@Command(name = "item", subcommands = {AddItemCommand.class, ListItemsCommand.class, RemoveItemCommand.class})`).
