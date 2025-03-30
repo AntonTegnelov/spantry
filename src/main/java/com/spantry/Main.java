@@ -1,5 +1,6 @@
 package com.spantry;
 
+import com.spantry.cli.DependencyFactory;
 import com.spantry.cli.SpantryCliApp;
 import com.spantry.inventory.repository.InMemoryInventoryRepository;
 import com.spantry.inventory.repository.InventoryRepository;
@@ -22,12 +23,14 @@ public class Main {
         InventoryRepository repository = new InMemoryInventoryRepository();
         InventoryService service = new InventoryServiceImpl(repository);
 
-        // Instantiate the CLI application
-        SpantryCliApp app = new SpantryCliApp();
-        // TODO: Inject dependencies into commands using a Factory or similar
+        // Create Factory for Dependency Injection
+        CommandLine.IFactory factory = new DependencyFactory(service);
 
-        // Execute picocli command structure
-        int exitCode = new CommandLine(app).execute(args);
+        // Instantiate the root CLI command (picocli will use the factory for subcommands)
+        SpantryCliApp app = new SpantryCliApp();
+
+        // Execute picocli command structure, providing the factory
+        int exitCode = new CommandLine(app, factory).execute(args);
         System.exit(exitCode);
     }
 } 

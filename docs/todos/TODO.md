@@ -56,6 +56,15 @@ This document outlines the specific tasks for building the Spantry application, 
   - [x] Instantiate `InventoryService service = new InventoryServiceImpl(repo);`
   - [ ] Pass the `InventoryService` instance (the interface type!) to the CLI commands via their constructors or a setter method configured by picocli's factory.
 - **[Inventory Commands]** (`src/main/java/com/spantry/cli/command`)
-  - [ ] Create `ItemCommands.java` (e.g., annotated with `@Command(name = "item", subcommands = {AddItemCommand.class, ListItemsCommand.class, RemoveItemCommand.class})`).
-  - [ ] Implement `AddItemCommand.java` (`@Command(name = "add")`). Use `@Option` for parameters. Inject `InventoryService` (interface!) via constructor/factory. Call the appropriate service method.
-  - [ ] Implement `
+  - [x] Create `ItemCommands.java` (e.g., annotated with `@Command(name = "item", subcommands = {AddItemCommand.class, ListItemsCommand.class, RemoveItemCommand.class})`).
+  - [x] Implement `AddItemCommand.java` (`@Command(name = "add")`). Use `@Option` for parameters. Inject `InventoryService` (interface!) via constructor/factory. Call the appropriate service method.
+  - [x] Implement `ListItemsCommand.java` (`@Command(name = "list")`). Inject `InventoryService` (interface!) via constructor/factory. Call the appropriate service method.
+  - [x] Implement `RemoveItemCommand.java` (`@Command(name = "remove")`). Inject `InventoryService` (interface!) via constructor/factory. Call the appropriate service method.
+- **[Dependency Injection (DI) Wiring]**
+  - [x] Instantiate `InMemoryInventoryRepository` in `Main.java` (Composition Root).
+  - [x] Instantiate `InventoryService` (`InventoryServiceImpl`) in `Main.java`, passing the repository.
+  - [x] Wire `InventoryService` into Commands (e.g., using Picocli's `IFactory`).
+- **[Implement Command Logic]**
+  - [ ] `AddItemCommand`: Call `inventoryService.addItem()`.
+  - [ ] `ListItemsCommand`: Call `inventoryService.getAllItems()`.
+  - [ ] `RemoveItemCommand`: Call `inventoryService.removeItem()`.
