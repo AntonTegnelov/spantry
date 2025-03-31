@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -78,19 +80,19 @@ class AddItemCommandTest {
   @Test
   void call_ValidInput_ShouldCallServiceAndSucceed() throws Exception {
     // Arrange
-    String name = "Milk";
-    int quantity = 1;
-    Location location = Location.FRIDGE;
-    String expiryStr = "2024-12-31";
-    LocalDate expiryDate = LocalDate.parse(expiryStr);
-    String generatedId = "f11c1743-c557-45f7-a23a-499865d5d66c";
+    final String name = "Milk";
+    final int quantity = 1;
+    final Location location = Location.FRIDGE;
+    final String expiryStr = "2024-12-31";
+    final LocalDate expiryDate = LocalDate.parse(expiryStr);
+    final String generatedId = "f11c1743-c557-45f7-a23a-499865d5d66c";
 
     setField(addItemCommand, "name", name);
     setField(addItemCommand, "quantity", quantity);
     setField(addItemCommand, "location", location);
     setField(addItemCommand, "expirationDateStr", expiryStr);
 
-    InventoryItem expectedSavedItem =
+    final InventoryItem expectedSavedItem =
         new InventoryItem(generatedId, name, quantity, location, expiryDate);
     when(mockInventoryService.addItem(any(AddItemCommandDto.class))).thenReturn(expectedSavedItem);
 
@@ -115,17 +117,17 @@ class AddItemCommandTest {
   @Test
   void call_ValidInputNoExpiry_ShouldCallServiceWithNullDate() throws Exception {
     // Arrange
-    String name = "Flour";
-    int quantity = 1;
-    Location location = Location.PANTRY;
-    String generatedId = "id-no-expiry";
+    final String name = "Flour";
+    final int quantity = 1;
+    final Location location = Location.PANTRY;
+    final String generatedId = "id-no-expiry";
 
     setField(addItemCommand, "name", name);
     setField(addItemCommand, "quantity", quantity);
     setField(addItemCommand, "location", location);
     setField(addItemCommand, "expirationDateStr", null); // No expiry provided
 
-    InventoryItem expectedSavedItem =
+    final InventoryItem expectedSavedItem =
         new InventoryItem(generatedId, name, quantity, location, null); // Expect null LocalDate
     when(mockInventoryService.addItem(any(AddItemCommandDto.class))).thenReturn(expectedSavedItem);
 
@@ -210,10 +212,10 @@ class AddItemCommandTest {
   @Test
   void call_ServiceThrowsException_ShouldLogErrorAndReturnErrorCode() throws Exception {
     // Arrange
-    String name = "Error Item";
-    int quantity = 1;
-    Location location = Location.OTHER;
-    String errorMessage = "Database connection failed";
+    final String name = "Error Item";
+    final int quantity = 1;
+    final Location location = Location.OTHER;
+    final String errorMessage = "Database connection failed";
 
     setField(addItemCommand, "name", name);
     setField(addItemCommand, "quantity", quantity);

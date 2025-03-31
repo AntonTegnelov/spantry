@@ -1,13 +1,15 @@
 package com.spantry.e2e;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.spantry.testsupport.CliTestSupport;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 /** End-to-End test for the 'item add' command. Uses CliTestSupport for running the application. */
-class ItemAddE2ETest extends CliTestSupport {
+class ItemAddE2eTest extends CliTestSupport {
 
   @Test
   void addItemSuccessfully() throws IOException, InterruptedException {

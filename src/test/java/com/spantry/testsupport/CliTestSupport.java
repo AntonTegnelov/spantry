@@ -19,7 +19,10 @@ import org.junit.jupiter.api.BeforeEach;
  */
 public abstract class CliTestSupport {
 
-  // Simple record to hold process execution results
+  /**
+   * Record to hold the results of a process execution, including exit code and output streams. Used
+   * to capture and verify results from CLI command execution during E2E tests.
+   */
   public record ProcessOutput(int exitCode, String stdout, String stderr) {}
 
   // Path to the application script in the installed distribution
@@ -43,7 +46,8 @@ public abstract class CliTestSupport {
   protected ProcessOutput runCliCommand(String... args) throws IOException, InterruptedException {
     if (SCRIPT_PATH == null) {
       throw new IllegalStateException(
-          "Application script not found in build/install/spantry/bin. Ensure 'gradlew installDist' has run.");
+          "Application script not found in build/install/spantry/bin. "
+              + "Ensure 'gradlew installDist' has run.");
     }
 
     List<String> command = new ArrayList<>();

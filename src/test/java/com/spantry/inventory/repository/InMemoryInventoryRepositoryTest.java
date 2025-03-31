@@ -1,6 +1,9 @@
 package com.spantry.inventory.repository;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.spantry.inventory.domain.InventoryItem;
 import com.spantry.inventory.domain.Location;
@@ -166,18 +169,18 @@ class InMemoryInventoryRepositoryTest {
   @Test
   void findByLocation_shouldReturnMatchingItems() {
     // Arrange
-    InventoryItem pantryItem1 =
+    final InventoryItem pantryItem1 =
         repository.save(new InventoryItem(null, "Pantry 1", 1, Location.PANTRY, null));
-    InventoryItem fridgeItem =
+    final InventoryItem fridgeItem =
         repository.save(new InventoryItem(null, "Fridge 1", 1, Location.FRIDGE, null));
-    InventoryItem pantryItem2 =
+    final InventoryItem pantryItem2 =
         repository.save(new InventoryItem(null, "Pantry 2", 2, Location.PANTRY, null));
 
     // Act: Use a new instance
-    InMemoryInventoryRepository reloadedRepo = new InMemoryInventoryRepository();
-    List<InventoryItem> pantryItems = reloadedRepo.findByLocation(Location.PANTRY);
-    List<InventoryItem> fridgeItems = reloadedRepo.findByLocation(Location.FRIDGE);
-    List<InventoryItem> freezerItems = reloadedRepo.findByLocation(Location.FREEZER);
+    final InMemoryInventoryRepository reloadedRepo = new InMemoryInventoryRepository();
+    final List<InventoryItem> pantryItems = reloadedRepo.findByLocation(Location.PANTRY);
+    final List<InventoryItem> fridgeItems = reloadedRepo.findByLocation(Location.FRIDGE);
+    final List<InventoryItem> freezerItems = reloadedRepo.findByLocation(Location.FREEZER);
 
     // Assert
     assertEquals(2, pantryItems.size());

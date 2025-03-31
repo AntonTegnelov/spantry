@@ -1,6 +1,10 @@
 package com.spantry.e2e;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.spantry.testsupport.CliTestSupport;
 import java.io.IOException;
@@ -9,7 +13,7 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 /** End-to-End test for the 'item remove' command. */
-class ItemRemoveE2ETest extends CliTestSupport {
+class ItemRemoveE2eTest extends CliTestSupport {
 
   // Pattern to extract UUID from the list output (adjust if output format changes)
   private static final Pattern UUID_PATTERN =

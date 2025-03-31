@@ -1,6 +1,7 @@
 package com.spantry.e2e;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.spantry.testsupport.CliTestSupport;
 import java.io.IOException;
@@ -12,7 +13,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 /** End-to-End test for the 'item list' command. */
 // Ensure tests run in a specific order to manage state dependency
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class ItemListE2ETest extends CliTestSupport {
+class ItemListE2eTest extends CliTestSupport {
 
   @Test
   @Order(2) // Run this second, after the empty list test
