@@ -99,53 +99,102 @@ public class AddItemCommand implements Callable<Integer> {
   // --- Callable Implementation ---
 
   @Override
-  // Remove suppression from here as it's now on the class
-  // @SuppressWarnings({"PMD.CognitiveComplexity", "PMD.AvoidCatchingGenericException"})
+  // Suppress warnings as they're now handled at the class level
   public Integer call() {
-    int exitCode = 0; // Default to success
+    // Initialize to failure by default - safer
+    int exitCode = 1;
     final LocalDate expDate = parseExpirationDate(); // Now returns LocalDate or null
 
     // Check if parsing failed (indicated by non-null input string but null result date)
-    if (expirationDateStr != null && !expirationDateStr.isBlank() && expDate == null) {
-      // Error already logged by parseExpirationDate()
-      exitCode = 1;
-    } else {
-      // Create DTO with potentially null LocalDate
-      final AddItemCommandDto commandDto = new AddItemCommandDto(name, quantity, location, expDate);
+    if (!hasDateParsingFailed(expDate)) {
+      exitCode = processValidCommand(expDate);
+    }
 
-      // Validate the DTO
-      final Set<ConstraintViolation<AddItemCommandDto>> violations = VALIDATOR.validate(commandDto);
-      if (violations.isEmpty()) {
-        // Proceed only if validation passed
-        try {
-          final InventoryItem addedItem = inventoryService.addItem(commandDto);
-          if (LOG.isInfoEnabled()) {
-            LOG.info("Successfully added item:");
-            LOG.info("  ID: {}", addedItem.itemId());
-            LOG.info("  Name: {}", addedItem.name());
-            LOG.info("  Quantity: {}", addedItem.quantity());
-            LOG.info("  Location: {}", addedItem.location());
-            // Use the optional getter for logging
-            addedItem
-                .getExpirationDateOptional()
-                .ifPresent(date -> LOG.info("  Expires: {}", date));
-          }
-        } catch (RuntimeException e) {
-          LOG.error("An unexpected error occurred while adding the item: {}", e.getMessage(), e);
-          exitCode = 1;
-        }
-      } else {
-        // Validation failed
-        if (LOG.isErrorEnabled()) {
-          LOG.error("Error: Invalid item data:");
-          for (final ConstraintViolation<AddItemCommandDto> violation : violations) {
-            LOG.error("  - {}", violation.getMessage());
-          }
-        }
-        exitCode = 1;
+    return exitCode; // Single return point
+  }
+
+  /**
+   * Checks if date parsing failed.
+   *
+   * @param parsedDate the parsed date result
+   * @return true if parsing failed, false otherwise
+   */
+  private boolean hasDateParsingFailed(final LocalDate parsedDate) {
+    return expirationDateStr != null && !expirationDateStr.isBlank() && parsedDate == null;
+  }
+
+  /**
+   * Processes a command with valid date (or no date).
+   *
+   * @param expDate the expiration date (may be null)
+   * @return exit code (0 for success, 1 for error)
+   */
+  private int processValidCommand(final LocalDate expDate) {
+    // Create DTO with potentially null LocalDate
+    final AddItemCommandDto commandDto = new AddItemCommandDto(name, quantity, location, expDate);
+
+    // Validate the DTO
+    final Set<ConstraintViolation<AddItemCommandDto>> violations = VALIDATOR.validate(commandDto);
+
+    int exitCode = 1; // Default to error
+    if (violations.isEmpty()) {
+      exitCode = addItemWithValidatedCommand(commandDto);
+    } else {
+      // Validation failed
+      logValidationErrors(violations);
+    }
+    return exitCode;
+  }
+
+  /**
+   * Adds an item using a validated command.
+   *
+   * @param commandDto the validated command
+   * @return exit code (0 for success, 1 for error)
+   */
+  private int addItemWithValidatedCommand(final AddItemCommandDto commandDto) {
+    int exitCode = 1; // Default to error
+    try {
+      final InventoryItem addedItem = inventoryService.addItem(commandDto);
+      logSuccessfulAdd(addedItem);
+      exitCode = 0; // Success!
+    } catch (RuntimeException e) {
+      if (LOG.isErrorEnabled()) {
+        LOG.error("An unexpected error occurred while adding the item: {}", e.getMessage(), e);
       }
     }
-    return exitCode; // Single return point
+    return exitCode;
+  }
+
+  /**
+   * Logs validation errors.
+   *
+   * @param violations the validation constraint violations
+   */
+  private void logValidationErrors(final Set<ConstraintViolation<AddItemCommandDto>> violations) {
+    if (LOG.isErrorEnabled()) {
+      LOG.error("Error: Invalid item data:");
+      for (final ConstraintViolation<AddItemCommandDto> violation : violations) {
+        LOG.error("  - {}", violation.getMessage());
+      }
+    }
+  }
+
+  /**
+   * Logs successful item addition.
+   *
+   * @param addedItem the added inventory item
+   */
+  private void logSuccessfulAdd(final InventoryItem addedItem) {
+    if (LOG.isInfoEnabled()) {
+      LOG.info("Successfully added item:");
+      LOG.info("  ID: {}", addedItem.itemId());
+      LOG.info("  Name: {}", addedItem.name());
+      LOG.info("  Quantity: {}", addedItem.quantity());
+      LOG.info("  Location: {}", addedItem.location());
+      // Use the optional getter for logging
+      addedItem.getExpirationDateOptional().ifPresent(date -> LOG.info("  Expires: {}", date));
+    }
   }
 
   /**

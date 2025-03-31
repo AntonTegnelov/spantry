@@ -63,6 +63,7 @@ public final class SpantryApplication {
     }
 
     @Override
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
     public <K> K create(final Class<K> cls) {
       K instance;
       try {
@@ -75,15 +76,15 @@ public final class SpantryApplication {
           // Attempt to create using the default constructor
           instance = CommandLine.defaultFactory().create(cls);
         } catch (Exception fallbackEx) {
-          // Catch Exception from default factory creation attempt
-          // Log the original NoSuchMethodException as context
-          // Consider logging fallbackEx as well if needed
-          // Throw a specific exception indicating both attempts failed
-          throw new DependencyCreationException(
-              "Failed to create instance for: "
-                  + cls.getName()
-                  + ". No constructor(InventoryService) found, and default constructor failed.",
-              fallbackEx); // Chain the fallback exception
+          // Wrap both exceptions using specific exception
+          final DependencyCreationException exception =
+              new DependencyCreationException(
+                  "Failed to create instance for: "
+                      + cls.getName()
+                      + ". No constructor(InventoryService) found, and default constructor failed.",
+                  fallbackEx);
+          exception.addSuppressed(e); // Add the original exception as suppressed
+          throw exception; // Chain both exceptions
         }
       } catch (InstantiationException
           | IllegalAccessException

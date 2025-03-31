@@ -42,22 +42,55 @@ public class ListItemsCommand implements Callable<Integer> {
   public Integer call() {
     int exitCode = 0; // Default to success
     try {
-      List<InventoryItem> items;
-      if (location == null) {
-        if (LOG.isInfoEnabled()) {
-          LOG.info("Listing all inventory items:");
-        }
-        items = inventoryService.getAllItems();
-      } else {
-        if (LOG.isInfoEnabled()) {
-          LOG.info("Listing items in location: {}", location);
-        }
-        items = inventoryService.getItemsByLocation(location);
-      }
+      // Fetch items based on filter
+      final List<InventoryItem> items = fetchItems();
 
-      if (items.isEmpty()) {
+      // Display items
+      displayItems(items);
+
+      // exitCode remains 0 if successful
+    } catch (RuntimeException e) {
+      if (LOG.isErrorEnabled()) {
+        LOG.error("Error listing items: {}", e.getMessage(), e);
+      }
+      exitCode = 1; // Set error code
+    }
+    return exitCode; // Single return point
+  }
+
+  /**
+   * Fetches items from the inventory service based on location filter.
+   *
+   * @return List of inventory items
+   */
+  private List<InventoryItem> fetchItems() {
+    List<InventoryItem> items;
+    if (location == null) {
+      if (LOG.isInfoEnabled()) {
+        LOG.info("Listing all inventory items:");
+      }
+      items = inventoryService.getAllItems();
+    } else {
+      if (LOG.isInfoEnabled()) {
+        LOG.info("Listing items in location: {}", location);
+      }
+      items = inventoryService.getItemsByLocation(location);
+    }
+    return items;
+  }
+
+  /**
+   * Displays the list of items to the log.
+   *
+   * @param items List of inventory items to display
+   */
+  private void displayItems(final List<InventoryItem> items) {
+    if (items.isEmpty()) {
+      if (LOG.isInfoEnabled()) {
         LOG.info("No items found in inventory.");
-      } else {
+      }
+    } else {
+      if (LOG.isInfoEnabled()) {
         // Use simpler format matching test expectations
         for (final InventoryItem item : items) {
           // Use direct field and handle null for expiry
@@ -69,14 +102,7 @@ public class ListItemsCommand implements Callable<Integer> {
                   item.itemId(), item.name(), item.quantity(), item.location(), expiryStr));
         }
       }
-      // exitCode remains 0 if successful
-    } catch (RuntimeException e) {
-      if (LOG.isErrorEnabled()) {
-        LOG.error("Error listing items: {}", e.getMessage(), e);
-      }
-      exitCode = 1; // Set error code
     }
-    return exitCode; // Single return point
   }
 
   // Helper to truncate long names for display - Removed as it interferes with tests

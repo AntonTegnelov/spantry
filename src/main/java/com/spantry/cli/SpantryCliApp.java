@@ -30,9 +30,10 @@ public class SpantryCliApp implements Runnable {
   // Picocli will now use the default no-arg constructor for the root command.
   // The DependencyFactory handles injection for subcommands.
 
-  /** Default constructor. Required by PMD rule, otherwise compiler-generated is fine. */
+  /** Default constructor required by PMD rule. */
+  @SuppressWarnings("PMD.UnnecessaryConstructor")
   public SpantryCliApp() {
-    // No initialization needed here for the root command currently.
+    // No initialization needed
   }
 
   @Override

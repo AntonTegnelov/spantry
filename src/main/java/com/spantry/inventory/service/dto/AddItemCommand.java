@@ -17,7 +17,14 @@ public record AddItemCommand(
     Location location, // Non-null
     Optional<LocalDate> expirationDate // Optional, Non-null Optional object itself
     ) {
-  // Compact constructor for validation (optional but good practice)
+  /**
+   * Compact constructor for validation that enforces the constraints for the AddItemCommand.
+   *
+   * @throws IllegalArgumentException if name is null or blank
+   * @throws IllegalArgumentException if quantity is negative
+   * @throws IllegalArgumentException if location is null
+   * @throws IllegalArgumentException if expirationDate Optional is null
+   */
   public AddItemCommand {
     if (name == null || name.isBlank()) {
       throw new IllegalArgumentException("Item name cannot be null or blank");

@@ -5,8 +5,6 @@ import com.spantry.inventory.domain.InventoryItem;
 import com.spantry.inventory.domain.Location;
 import java.io.EOFException;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -41,7 +39,7 @@ public class InMemoryInventoryRepository implements InventoryRepository {
   }
 
   @Override
-  public synchronized InventoryItem save(final InventoryItem item) {
+  public InventoryItem save(final InventoryItem item) {
     Objects.requireNonNull(item, "Item cannot be null for saving");
 
     String itemId = item.itemId();
@@ -56,36 +54,46 @@ public class InMemoryInventoryRepository implements InventoryRepository {
       itemToStore = item;
     }
 
-    inventory.put(itemToStore.itemId(), itemToStore);
-    saveInventoryToFile(); // Save after modification
+    synchronized (this) {
+      inventory.put(itemToStore.itemId(), itemToStore);
+      saveInventoryToFile(); // Save after modification
+    }
     return itemToStore;
   }
 
   @Override
-  public synchronized Optional<InventoryItem> findById(final String itemId) {
+  public Optional<InventoryItem> findById(final String itemId) {
     Objects.requireNonNull(itemId, "Item ID cannot be null for findById");
-    return Optional.ofNullable(inventory.get(itemId));
-  }
-
-  @Override
-  public synchronized List<InventoryItem> findAll() {
-    return List.copyOf(inventory.values());
-  }
-
-  @Override
-  public synchronized void deleteById(final String itemId) {
-    Objects.requireNonNull(itemId, "Item ID cannot be null for deleteById");
-    if (inventory.remove(itemId) != null) {
-      saveInventoryToFile(); // Save only if something was actually removed
+    synchronized (this) {
+      return Optional.ofNullable(inventory.get(itemId));
     }
   }
 
   @Override
-  public synchronized List<InventoryItem> findByLocation(final Location location) {
+  public List<InventoryItem> findAll() {
+    synchronized (this) {
+      return List.copyOf(inventory.values());
+    }
+  }
+
+  @Override
+  public void deleteById(final String itemId) {
+    Objects.requireNonNull(itemId, "Item ID cannot be null for deleteById");
+    synchronized (this) {
+      if (inventory.remove(itemId) != null) {
+        saveInventoryToFile(); // Save only if something was actually removed
+      }
+    }
+  }
+
+  @Override
+  public List<InventoryItem> findByLocation(final Location location) {
     Objects.requireNonNull(location, "Location cannot be null for findByLocation");
-    return inventory.values().stream()
-        .filter(item -> item.location() == location)
-        .collect(Collectors.toUnmodifiableList());
+    synchronized (this) {
+      return inventory.values().stream()
+          .filter(item -> item.location() == location)
+          .collect(Collectors.toUnmodifiableList());
+    }
   }
 
   // --- Serialization/Deserialization Logic ---
@@ -95,63 +103,113 @@ public class InMemoryInventoryRepository implements InventoryRepository {
     try {
       Files.createDirectories(DATA_FILE_PATH.getParent());
     } catch (IOException e) {
-      LOG.error("Failed to create directory for data file: {}", DATA_FILE_PATH.getParent(), e);
+      if (LOG.isErrorEnabled()) {
+        LOG.error("Failed to create directory for data file: {}", DATA_FILE_PATH.getParent(), e);
+      }
       // Decide if we should throw or just log - logging for now
       return; // Cannot save if dir fails
     }
 
-    try (ObjectOutputStream oos =
-        new ObjectOutputStream(new FileOutputStream(DATA_FILE_PATH.toFile()))) {
+    try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(DATA_FILE_PATH))) {
       oos.writeObject(new ConcurrentHashMap<>(this.inventory)); // Save a copy
-      LOG.debug("Inventory saved to file: {}", DATA_FILE_PATH);
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Inventory saved to file: {}", DATA_FILE_PATH);
+      }
     } catch (IOException e) {
-      LOG.error("Failed to save inventory to file: {}", DATA_FILE_PATH, e);
+      if (LOG.isErrorEnabled()) {
+        LOG.error("Failed to save inventory to file: {}", DATA_FILE_PATH, e);
+      }
     }
   }
 
   @SuppressWarnings("unchecked")
   private Map<String, InventoryItem> loadInventoryFromFile() {
-    File dataFile = DATA_FILE_PATH.toFile();
-    if (!dataFile.exists()) {
+    final File dataFile = DATA_FILE_PATH.toFile();
+    final Map<String, InventoryItem> result = new ConcurrentHashMap<>();
+
+    // Check if file exists
+    if (dataFile.exists()) {
+      // Try to load existing file
+      tryLoadExistingInventoryFile(result);
+    } else if (LOG.isDebugEnabled()) {
       LOG.debug("Inventory data file not found, starting fresh: {}", DATA_FILE_PATH);
-      return new ConcurrentHashMap<>();
     }
 
-    try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(dataFile))) {
-      Object readObject = ois.readObject();
+    return result;
+  }
+
+  /**
+   * Helper method to try loading inventory from an existing file. This method modifies the provided
+   * map by reference.
+   *
+   * @param resultMap the map to populate with loaded data
+   */
+  @SuppressWarnings("unchecked")
+  private void tryLoadExistingInventoryFile(final Map<String, InventoryItem> resultMap) {
+    try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(DATA_FILE_PATH))) {
+      final Object readObject = ois.readObject();
+
+      // Check if object is the expected Map type
       if (readObject instanceof Map) {
-        LOG.debug("Inventory loaded from file: {}", DATA_FILE_PATH);
-        // Ensure it's the correct type and make it concurrent
-        return new ConcurrentHashMap<>((Map<String, InventoryItem>) readObject);
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Inventory loaded from file: {}", DATA_FILE_PATH);
+        }
+        // Copy data to the provided result map
+        resultMap.putAll((Map<String, InventoryItem>) readObject);
       } else {
-        LOG.error(
-            "Inventory data file is corrupted (unexpected object type: {}). Starting fresh.",
-            readObject.getClass().getName());
-        deleteDataFile(); // Delete corrupted file
-        return new ConcurrentHashMap<>();
+        handleCorruptedFile("unexpected object type: " + readObject.getClass().getName());
       }
     } catch (EOFException e) {
-      LOG.warn("Inventory data file is empty or truncated. Starting fresh: {}", DATA_FILE_PATH);
-      deleteDataFile();
-      return new ConcurrentHashMap<>();
+      handleCorruptedFile("empty or truncated file", e);
     } catch (IOException | ClassNotFoundException e) {
-      LOG.error("Failed to load inventory from file: {}. Starting fresh.", DATA_FILE_PATH, e);
-      deleteDataFile(); // Attempt to delete potentially corrupt file
-      return new ConcurrentHashMap<>();
+      handleCorruptedFile("IO or class loading error", e);
     }
+  }
+
+  /**
+   * Helper method to handle corrupted inventory files.
+   *
+   * @param reason description of corruption
+   * @param exception optional exception that caused the corruption
+   */
+  private void handleCorruptedFile(final String reason, final Exception... exception) {
+    if (exception.length > 0 && exception[0] instanceof EOFException) {
+      if (LOG.isWarnEnabled()) {
+        LOG.warn("Inventory data file is empty or truncated. Starting fresh: {}", DATA_FILE_PATH);
+      }
+    } else if (exception.length > 0) {
+      if (LOG.isErrorEnabled()) {
+        LOG.error(
+            "Failed to load inventory from file: {}. Starting fresh. Reason: {}",
+            DATA_FILE_PATH,
+            reason,
+            exception[0]);
+      }
+    } else {
+      if (LOG.isErrorEnabled()) {
+        LOG.error("Inventory data file is corrupted ({}). Starting fresh.", reason);
+      }
+    }
+    deleteDataFile();
   }
 
   /** Deletes the data file, logging errors but not throwing exceptions. */
   public static void deleteDataFile() {
     try {
-      boolean deleted = Files.deleteIfExists(DATA_FILE_PATH);
+      final boolean deleted = Files.deleteIfExists(DATA_FILE_PATH);
       if (deleted) {
-        LOG.info("Deleted inventory data file: {}", DATA_FILE_PATH);
+        if (LOG.isInfoEnabled()) {
+          LOG.info("Deleted inventory data file: {}", DATA_FILE_PATH);
+        }
       } else {
-        LOG.debug("Inventory data file did not exist, nothing to delete: {}", DATA_FILE_PATH);
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Inventory data file did not exist, nothing to delete: {}", DATA_FILE_PATH);
+        }
       }
     } catch (IOException e) {
-      LOG.error("Failed to delete inventory data file: {}", DATA_FILE_PATH, e);
+      if (LOG.isErrorEnabled()) {
+        LOG.error("Failed to delete inventory data file: {}", DATA_FILE_PATH, e);
+      }
     }
   }
 }
