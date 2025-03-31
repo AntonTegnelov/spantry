@@ -10,7 +10,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 import org.junit.jupiter.api.BeforeEach;
 
 /**
@@ -19,14 +21,27 @@ import org.junit.jupiter.api.BeforeEach;
  */
 public abstract class CliTestSupport {
 
+  // Path to the application script in the installed distribution
+  private static final Path SCRIPT_PATH = findApplicationScript();
+
+  // Logger for this class
+  private static final Logger LOGGER = Logger.getLogger(CliTestSupport.class.getName());
+
   /**
    * Record to hold the results of a process execution, including exit code and output streams. Used
    * to capture and verify results from CLI command execution during E2E tests.
    */
   public record ProcessOutput(int exitCode, String stdout, String stderr) {}
 
-  // Path to the application script in the installed distribution
-  private static final Path SCRIPT_PATH = findApplicationScript();
+  /** Protected constructor for abstract class. */
+  protected CliTestSupport() {
+    // Default constructor for the abstract class
+  }
+
+  /**
+   * Abstract method to be implemented by concrete test classes to define their test-specific setup.
+   */
+  protected abstract void prepareTestEnvironment();
 
   /** Deletes the E2E data file before each test method. */
   @BeforeEach
@@ -43,25 +58,26 @@ public abstract class CliTestSupport {
    * @throws IOException If an I/O error occurs.
    * @throws InterruptedException If the process is interrupted.
    */
-  protected ProcessOutput runCliCommand(String... args) throws IOException, InterruptedException {
+  protected ProcessOutput runCliCommand(final String... args)
+      throws IOException, InterruptedException {
     if (SCRIPT_PATH == null) {
       throw new IllegalStateException(
           "Application script not found in build/install/spantry/bin. "
               + "Ensure 'gradlew installDist' has run.");
     }
 
-    List<String> command = new ArrayList<>();
+    final List<String> command = new ArrayList<>();
     command.add(SCRIPT_PATH.toAbsolutePath().toString()); // Use absolute path for script
     command.addAll(Arrays.asList(args));
 
-    ProcessBuilder pb = new ProcessBuilder(command);
+    final ProcessBuilder pb = new ProcessBuilder(command);
     // Set working directory to the installation root for consistency
     pb.directory(SCRIPT_PATH.getParent().getParent().toFile());
 
-    Process process = pb.start();
+    final Process process = pb.start();
 
     // Capture stdout
-    StringBuilder stdoutBuilder = new StringBuilder();
+    final StringBuilder stdoutBuilder = new StringBuilder();
     try (BufferedReader reader =
         new BufferedReader(new InputStreamReader(process.getInputStream()))) {
       String line;
@@ -71,7 +87,7 @@ public abstract class CliTestSupport {
     }
 
     // Capture stderr
-    StringBuilder stderrBuilder = new StringBuilder();
+    final StringBuilder stderrBuilder = new StringBuilder();
     try (BufferedReader reader =
         new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
       String line;
@@ -81,7 +97,7 @@ public abstract class CliTestSupport {
     }
 
     // Wait for process to complete (with a timeout)
-    boolean exited = process.waitFor(30, TimeUnit.SECONDS); // 30-second timeout
+    final boolean exited = process.waitFor(30, TimeUnit.SECONDS); // 30-second timeout
     if (!exited) {
       process.destroyForcibly();
       throw new InterruptedException("CLI command timed out.");
@@ -97,28 +113,38 @@ public abstract class CliTestSupport {
    * @return Path to the script file, or null if not found.
    */
   private static Path findApplicationScript() {
-    // Path relative to project root
-    Path scriptDir = Paths.get("build", "install", "spantry", "bin");
+    final Path scriptDir = Paths.get("build", "install", "spantry", "bin");
+    Path result = null;
 
-    if (!Files.isDirectory(scriptDir)) {
-      System.err.println("Warning: Script directory not found: " + scriptDir.toAbsolutePath());
-      return null;
+    // Check if the directory exists first (positive case)
+    if (Files.isDirectory(scriptDir)) {
+      // Determine script name based on OS - ternary is acceptable here by PMD defaults
+      final String scriptName =
+          System.getProperty("os.name").toLowerCase(Locale.ENGLISH).contains("win")
+              ? "spantry.bat"
+              : "spantry";
+
+      final Path scriptPath = scriptDir.resolve(scriptName);
+
+      // Simplified conditional logic to avoid confusing ternary pattern
+      if (Files.exists(scriptPath)) {
+        result = scriptPath;
+      } else {
+        // Use isLoggable for guard condition
+        if (LOGGER.isLoggable(java.util.logging.Level.WARNING)) {
+          LOGGER.warning(
+              "Warning: Application script '"
+                  + scriptName
+                  + "' not found in "
+                  + scriptDir.toAbsolutePath());
+        }
+      }
+    } else { // Handle the case where the directory does not exist
+      // Use isLoggable for guard condition
+      if (LOGGER.isLoggable(java.util.logging.Level.WARNING)) {
+        LOGGER.warning("Warning: Script directory not found: " + scriptDir.toAbsolutePath());
+      }
     }
-
-    // Determine script name based on OS
-    String scriptName =
-        System.getProperty("os.name").toLowerCase().contains("win") ? "spantry.bat" : "spantry";
-
-    Path scriptPath = scriptDir.resolve(scriptName);
-
-    if (!Files.exists(scriptPath)) {
-      System.err.println(
-          "Warning: Application script '"
-              + scriptName
-              + "' not found in "
-              + scriptDir.toAbsolutePath());
-      return null;
-    }
-    return scriptPath;
+    return result;
   }
 }

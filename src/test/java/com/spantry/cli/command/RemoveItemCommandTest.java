@@ -15,9 +15,7 @@ import com.spantry.inventory.service.InventoryService;
 import com.spantry.inventory.service.exception.ItemNotFoundException;
 import com.spantry.testsupport.ListAppender;
 import java.lang.reflect.Field;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,13 +59,6 @@ class RemoveItemCommandTest {
     return listAppender.getEvents().stream()
         .map(ILoggingEvent::getFormattedMessage)
         .anyMatch(msg -> msg != null && msg.contains(text));
-  }
-
-  // Helper to get log messages as a list of strings
-  private List<String> getLogMessages() {
-    return listAppender.getEvents().stream()
-        .map(ILoggingEvent::getFormattedMessage)
-        .collect(Collectors.toList());
   }
 
   // Helper to set private fields using reflection

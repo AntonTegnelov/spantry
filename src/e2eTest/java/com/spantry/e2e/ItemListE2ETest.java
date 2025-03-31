@@ -15,26 +15,39 @@ import org.junit.jupiter.api.TestMethodOrder;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ItemListE2eTest extends CliTestSupport {
 
+  /** Default constructor. */
+  ItemListE2eTest() {
+    super(); // Added to satisfy PMD rule about calling super()
+    // Default constructor added to satisfy PMD rule
+  }
+
+  /**
+   * Implements the abstract method from CliTestSupport. Prepares the test environment for this
+   * specific test class.
+   */
+  @Override
+  protected void prepareTestEnvironment() {
+    // No specific environment preparation needed for this test
+  }
+
+  /**
+   * Tests that items are correctly listed when they exist in the inventory. Multiple assertions are
+   * needed to fully validate the display format of multiple items.
+   */
   @Test
   @Order(2) // Run this second, after the empty list test
-  void listItems_whenItemsExist_shouldShowItems() throws IOException, InterruptedException {
+  void listItemsWhenItemsExistShouldShowItems() throws IOException, InterruptedException {
     // Arrange: Add some items first
-    runCliCommand(
-        new String[] {
-          "item", "add", "--name", "E2E_Milk", "--quantity", "1", "--location", "FRIDGE"
-        });
-    runCliCommand(
-        new String[] {
-          "item", "add", "--name", "E2E_Bread", "--quantity", "2", "--location", "PANTRY"
-        });
+    runCliCommand("item", "add", "--name", "E2E_Milk", "--quantity", "1", "--location", "FRIDGE");
+    runCliCommand("item", "add", "--name", "E2E_Bread", "--quantity", "2", "--location", "PANTRY");
 
     // Act: Run the list command
-    String[] listArgs = {"item", "list"};
-    ProcessOutput output = runCliCommand(listArgs);
+    final ProcessOutput output = runCliCommand("item", "list");
 
     // Assert: Verify the output
     assertEquals(
         0, output.exitCode(), "CLI command should exit successfully. Stderr: " + output.stderr());
+    // The following assertions verify different aspects of the output formatting
     assertTrue(
         output.stdout().contains("Name: E2E_Milk"), "Output should contain first item name.");
     assertTrue(output.stdout().contains("Qty: 1"), "Output should contain first item quantity.");
@@ -47,16 +60,18 @@ class ItemListE2eTest extends CliTestSupport {
         output.stdout().contains("Loc: PANTRY"), "Output should contain second item location.");
   }
 
+  /**
+   * Tests the empty inventory case. Multiple assertions are needed to verify both successful
+   * execution and the expected message.
+   */
   @Test
   @Order(1) // Run this first to test the empty state
-  void listItems_whenNoItemsExist_shouldShowEmptyMessage()
-      throws IOException, InterruptedException {
+  void listItemsWhenNoItemsExistShouldShowEmptyMessage() throws IOException, InterruptedException {
     // Reset: Delete the data file to attempt to start with clean state
     com.spantry.inventory.repository.InMemoryInventoryRepository.deleteDataFile();
 
     // Act: Run the list command
-    String[] listArgs = {"item", "list"};
-    ProcessOutput output = runCliCommand(listArgs);
+    final ProcessOutput output = runCliCommand("item", "list");
 
     // Assert: Verify the command executed successfully, but don't be strict about content
     // since E2E tests can have state that persists between runs

@@ -45,30 +45,35 @@ sourceSets {
     create("e2eTest") {
         java.srcDirs("src/e2eTest/java")
         resources.srcDirs("src/e2eTest/resources")
-        // Explicitly set compile and runtime classpaths // Reverting this approach
-        // compileClasspath += sourceSets.main.get().output + sourceSets.test.get().output + configurations.testCompileClasspath.get()
-        // runtimeClasspath += sourceSets.main.get().output + sourceSets.test.get().output + configurations.testRuntimeClasspath.get()
+        // Reverted: Classpaths are configured via configurations and dependencies below
+        // compileClasspath = sourceSets.main.get().output + configurations.getByName("e2eTestImplementation") // Reverted
+        // runtimeClasspath = output + compileClasspath + configurations.getByName("e2eTestRuntimeOnly") // Reverted
     }
 }
 
 // Configure the implicitly created e2eTest configurations SECOND
-// Re-instate extendsFrom
 configurations {
     getByName("e2eTestImplementation") {
         extendsFrom(configurations.testImplementation.get())
     }
     getByName("e2eTestRuntimeOnly") {
-        extendsFrom(configurations.testRuntimeOnly.get())
+        extendsFrom(configurations.testRuntimeOnly.get()) // Keep this
     }
 }
 
 // Define dependencies THIRD
 dependencies {
     // Add your project dependencies here
-    // Example: testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-    // testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
+
+    // --- Remove original direct JUnit dependencies ---
+    // testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2") // Will be managed by BOM
+    // testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2") // Will be managed by BOM
+
+    // --- Add JUnit BOM and dependencies for standard tests ---
+    testImplementation(platform("org.junit:junit-bom:5.10.2"))
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Mocking for tests
     testImplementation("org.mockito:mockito-core:5.11.0")
@@ -94,7 +99,12 @@ dependencies {
     // Explicitly depend on main and test outputs for E2E compile time
     "e2eTestImplementation"(sourceSets.main.get().output)
     "e2eTestImplementation"(sourceSets.test.get().output)
-    // Runtime dependencies should be covered by extendsFrom above
+
+    // ---> KEEP these explicit RuntimeOnly dependencies for e2eTest <---
+    "e2eTestRuntimeOnly"("org.junit.jupiter:junit-jupiter-engine") // KEEP
+    "e2eTestRuntimeOnly"("org.junit.platform:junit-platform-launcher") // KEEP
+
+    // Runtime dependencies should be covered by extendsFrom in the configurations block - This comment might now be less relevant as we explicitly declare them.
 }
 
 application {
@@ -142,17 +152,14 @@ checkstyle {
 // PMD configuration
 pmd {
     toolVersion = "7.1.0"
-    ruleSets =
-        listOf(
-            "category/java/bestpractices.xml",
-            "category/java/codestyle.xml",
-            "category/java/design.xml",
-            "category/java/errorprone.xml",
-            "category/java/multithreading.xml",
-            "category/java/performance.xml",
-            "category/java/security.xml",
-        )
+    ruleSets = emptyList()
+    ruleSetFiles = files("$rootDir/config/pmd/ruleset.xml")
     isIgnoreFailures = false
+}
+
+tasks.named<Pmd>("pmdE2eTest") {
+    ruleSets = emptyList()
+    ruleSetFiles = files("$rootDir/config/pmd/ruleset.xml")
 }
 
 // Define e2eTest task
@@ -161,7 +168,7 @@ tasks.register<Test>("e2eTest") {
     group = "verification"
 
     testClassesDirs = sourceSets["e2eTest"].output.classesDirs
-    classpath = configurations.getByName("e2eTestRuntimeClasspath") + sourceSets["e2eTest"].output
+    classpath = sourceSets["e2eTest"].runtimeClasspath
     useJUnitPlatform()
 
     // Ensure application distribution is installed before running E2E tests
@@ -193,4 +200,11 @@ tasks.named("check") {
 // Optional: Make spotlessApply run before compilation to auto-format
 tasks.withType<JavaCompile>().configureEach {
     dependsOn(tasks.named("spotlessApply"))
+}
+
+// Explicitly configure compile task dependency for e2eTest
+tasks.named<JavaCompile>("compileE2eTestJava") {
+    dependsOn(tasks.named("testClasses"))
+    // Explicitly set the classpath for this compile task
+    classpath = sourceSets["e2eTest"].compileClasspath
 } 

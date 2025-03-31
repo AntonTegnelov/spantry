@@ -14,8 +14,14 @@ public class ListAppender extends AppenderBase<ILoggingEvent> {
   // Use a synchronized list for basic thread safety, though tests usually run sequentially
   private final List<ILoggingEvent> events = Collections.synchronizedList(new ArrayList<>());
 
+  /** Default constructor. */
+  public ListAppender() {
+    super();
+    // Default constructor added to satisfy PMD rule
+  }
+
   @Override
-  protected void append(ILoggingEvent eventObject) {
+  protected void append(final ILoggingEvent eventObject) {
     // Ensure the event is fully processed before adding (e.g., caller data)
     eventObject.prepareForDeferredProcessing();
     events.add(eventObject);

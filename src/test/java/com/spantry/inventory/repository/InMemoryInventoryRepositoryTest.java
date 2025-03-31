@@ -19,6 +19,11 @@ class InMemoryInventoryRepositoryTest {
 
   private InMemoryInventoryRepository repository;
 
+  /** Default constructor. */
+  InMemoryInventoryRepositoryTest() {
+    // Default constructor added to satisfy PMD rule
+  }
+
   // Delete the data file before and after each test
   @BeforeEach
   @AfterEach // Run after as well to clean up for subsequent test classes if any
@@ -28,146 +33,148 @@ class InMemoryInventoryRepositoryTest {
   }
 
   @Test
-  void save_newItem_shouldGenerateIdAndStore() {
+  void saveNewItemShouldGenerateIdAndStore() {
     // Arrange
-    InventoryItem newItem = new InventoryItem(null, "Test Item", 1, Location.PANTRY, null);
+    final InventoryItem newItem = new InventoryItem(null, "Test Item", 1, Location.PANTRY, null);
 
     // Act
-    InventoryItem savedItem = repository.save(newItem);
+    final InventoryItem savedItem = repository.save(newItem);
 
     // Assert
-    assertNotNull(savedItem);
+    assertNotNull(savedItem, "Saved item should not be null");
     assertNotNull(savedItem.itemId(), "ID should be generated");
-    assertEquals(newItem.name(), savedItem.name());
-    assertEquals(newItem.quantity(), savedItem.quantity());
-    assertEquals(newItem.location(), savedItem.location());
-    assertEquals(newItem.expirationDate(), savedItem.expirationDate());
+    assertEquals(newItem.name(), savedItem.name(), "Name should match");
+    assertEquals(newItem.quantity(), savedItem.quantity(), "Quantity should match");
+    assertEquals(newItem.location(), savedItem.location(), "Location should match");
+    assertEquals(
+        newItem.expirationDate(), savedItem.expirationDate(), "Expiration date should match");
 
     // Verify item is stored and retrievable (reloads from file)
-    InMemoryInventoryRepository reloadedRepo = new InMemoryInventoryRepository();
-    Optional<InventoryItem> found = reloadedRepo.findById(savedItem.itemId());
-    assertTrue(found.isPresent());
-    assertEquals(savedItem, found.get());
+    final InMemoryInventoryRepository reloadedRepo = new InMemoryInventoryRepository();
+    final Optional<InventoryItem> found = reloadedRepo.findById(savedItem.itemId());
+    assertTrue(found.isPresent(), "Item should be found after saving");
+    assertEquals(savedItem, found.get(), "Loaded item should match saved item");
   }
 
   @Test
-  void save_existingItem_shouldUpdateAndStore() {
+  void saveExistingItemShouldUpdateAndStore() {
     // Arrange
-    InventoryItem initialItem = new InventoryItem(null, "Update Me", 1, Location.FRIDGE, null);
-    InventoryItem savedInitial = repository.save(initialItem);
-    String existingId = savedInitial.itemId();
+    final InventoryItem initialItem =
+        new InventoryItem(null, "Update Me", 1, Location.FRIDGE, null);
+    final InventoryItem savedInitial = repository.save(initialItem);
+    final String existingId = savedInitial.itemId();
 
-    InventoryItem updatedItem =
+    final InventoryItem updatedItem =
         new InventoryItem(existingId, "Updated Name", 5, Location.FRIDGE, null);
 
     // Act
-    InventoryItem savedUpdated = repository.save(updatedItem);
+    final InventoryItem savedUpdated = repository.save(updatedItem);
 
     // Assert
-    assertNotNull(savedUpdated);
-    assertEquals(existingId, savedUpdated.itemId()); // ID should remain the same
-    assertEquals(updatedItem.name(), savedUpdated.name());
-    assertEquals(updatedItem.quantity(), savedUpdated.quantity());
+    assertNotNull(savedUpdated, "Updated item should not be null");
+    assertEquals(existingId, savedUpdated.itemId(), "ID should remain the same");
+    assertEquals(updatedItem.name(), savedUpdated.name(), "Name should be updated");
+    assertEquals(updatedItem.quantity(), savedUpdated.quantity(), "Quantity should be updated");
 
     // Verify updated item is stored (reloads from file)
-    InMemoryInventoryRepository reloadedRepo = new InMemoryInventoryRepository();
-    Optional<InventoryItem> found = reloadedRepo.findById(existingId);
-    assertTrue(found.isPresent());
-    assertEquals(savedUpdated, found.get());
+    final InMemoryInventoryRepository reloadedRepo = new InMemoryInventoryRepository();
+    final Optional<InventoryItem> found = reloadedRepo.findById(existingId);
+    assertTrue(found.isPresent(), "Item should be found after updating");
+    assertEquals(savedUpdated, found.get(), "Loaded item should match updated item");
   }
 
   @Test
-  void findById_existingItem_shouldReturnItem() {
+  void findByIdExistingItemShouldReturnItem() {
     // Arrange
-    LocalDate expiry = LocalDate.now();
-    InventoryItem item =
+    final LocalDate expiry = LocalDate.now();
+    final InventoryItem item =
         repository.save(new InventoryItem(null, "Find Me", 1, Location.CUPBOARD, expiry));
-    String id = item.itemId();
+    final String itemId = item.itemId();
 
     // Act: Use a new instance to force reload from file
-    InMemoryInventoryRepository reloadedRepo = new InMemoryInventoryRepository();
-    Optional<InventoryItem> found = reloadedRepo.findById(id);
+    final InMemoryInventoryRepository reloadedRepo = new InMemoryInventoryRepository();
+    final Optional<InventoryItem> found = reloadedRepo.findById(itemId);
 
     // Assert
-    assertTrue(found.isPresent());
-    assertEquals(item, found.get());
+    assertTrue(found.isPresent(), "Item should be found");
+    assertEquals(item, found.get(), "Found item should match the saved item");
   }
 
   @Test
-  void findById_nonExistentItem_shouldReturnEmpty() {
+  void findByIdNonExistentItemShouldReturnEmpty() {
     // Arrange: Add an item so the file exists
     repository.save(new InventoryItem(null, "Other", 1, Location.OTHER, null));
     // Act: Use a new instance
-    InMemoryInventoryRepository reloadedRepo = new InMemoryInventoryRepository();
-    Optional<InventoryItem> found = reloadedRepo.findById("non-existent-id");
+    final InMemoryInventoryRepository reloadedRepo = new InMemoryInventoryRepository();
+    final Optional<InventoryItem> found = reloadedRepo.findById("non-existent-id");
 
     // Assert
-    assertTrue(found.isEmpty());
+    assertTrue(found.isEmpty(), "Finding non-existent item should return empty");
   }
 
   @Test
-  void findAll_whenEmpty_shouldReturnEmptyList() {
+  void findAllWhenEmptyShouldReturnEmptyList() {
     // Arrange: Ensure file is deleted (done by @BeforeEach)
     // Act: Create new instance (which loads from non-existent file)
-    InMemoryInventoryRepository reloadedRepo = new InMemoryInventoryRepository();
-    List<InventoryItem> allItems = reloadedRepo.findAll();
+    final InMemoryInventoryRepository reloadedRepo = new InMemoryInventoryRepository();
+    final List<InventoryItem> allItems = reloadedRepo.findAll();
 
     // Assert
-    assertNotNull(allItems);
-    assertTrue(allItems.isEmpty());
+    assertNotNull(allItems, "Result list should not be null");
+    assertTrue(allItems.isEmpty(), "Result list should be empty");
   }
 
   @Test
-  void findAll_withItems_shouldReturnAllItems() {
+  void findAllWithItemsShouldReturnAllItems() {
     // Arrange
-    InventoryItem item1 =
+    final InventoryItem item1 =
         repository.save(new InventoryItem(null, "Item 1", 1, Location.PANTRY, null));
-    InventoryItem item2 =
+    final InventoryItem item2 =
         repository.save(new InventoryItem(null, "Item 2", 2, Location.FRIDGE, LocalDate.now()));
 
     // Act: Use a new instance
-    InMemoryInventoryRepository reloadedRepo = new InMemoryInventoryRepository();
-    List<InventoryItem> allItems = reloadedRepo.findAll();
+    final InMemoryInventoryRepository reloadedRepo = new InMemoryInventoryRepository();
+    final List<InventoryItem> allItems = reloadedRepo.findAll();
 
     // Assert
-    assertEquals(2, allItems.size());
-    assertTrue(allItems.contains(item1));
-    assertTrue(allItems.contains(item2));
+    assertEquals(2, allItems.size(), "Should return 2 items");
+    assertTrue(allItems.contains(item1), "Result should contain first item");
+    assertTrue(allItems.contains(item2), "Result should contain second item");
   }
 
   @Test
-  void deleteById_existingItem_shouldRemoveItem() {
+  void deleteByIdExistingItemShouldRemoveItem() {
     // Arrange
-    InventoryItem item =
+    final InventoryItem item =
         repository.save(new InventoryItem(null, "Delete Me", 1, Location.FREEZER, null));
-    String id = item.itemId();
+    final String itemId = item.itemId();
     // Verify exists in initial repo
-    assertTrue(repository.findById(id).isPresent(), "Item should exist before delete");
+    assertTrue(repository.findById(itemId).isPresent(), "Item should exist before delete");
 
     // Act: Delete using the initial repo instance
-    repository.deleteById(id);
+    repository.deleteById(itemId);
 
     // Assert: Check using a new instance that reloads the file
-    InMemoryInventoryRepository reloadedRepo = new InMemoryInventoryRepository();
-    assertTrue(reloadedRepo.findById(id).isEmpty(), "Item should not exist after delete");
+    final InMemoryInventoryRepository reloadedRepo = new InMemoryInventoryRepository();
+    assertTrue(reloadedRepo.findById(itemId).isEmpty(), "Item should not exist after delete");
   }
 
   @Test
-  void deleteById_nonExistentItem_shouldDoNothing() {
+  void deleteByIdNonExistentItemShouldDoNothing() {
     // Arrange
     repository.save(new InventoryItem(null, "Existing", 1, Location.COUNTER, null));
-    long initialCount = repository.findAll().size();
+    final long initialCount = repository.findAll().size();
 
     // Act: Attempt delete using the initial repo
     repository.deleteById("non-existent-id");
 
     // Assert: Check using a reloaded repo
-    InMemoryInventoryRepository reloadedRepo = new InMemoryInventoryRepository();
+    final InMemoryInventoryRepository reloadedRepo = new InMemoryInventoryRepository();
     assertEquals(initialCount, reloadedRepo.findAll().size(), "Size should not change");
   }
 
   @Test
-  void findByLocation_shouldReturnMatchingItems() {
+  void findByLocationShouldReturnMatchingItems() {
     // Arrange
     final InventoryItem pantryItem1 =
         repository.save(new InventoryItem(null, "Pantry 1", 1, Location.PANTRY, null));
@@ -183,35 +190,47 @@ class InMemoryInventoryRepositoryTest {
     final List<InventoryItem> freezerItems = reloadedRepo.findByLocation(Location.FREEZER);
 
     // Assert
-    assertEquals(2, pantryItems.size());
-    assertTrue(pantryItems.contains(pantryItem1));
-    assertTrue(pantryItems.contains(pantryItem2));
+    assertEquals(2, pantryItems.size(), "Should find 2 pantry items");
+    assertTrue(pantryItems.contains(pantryItem1), "Should contain first pantry item");
+    assertTrue(pantryItems.contains(pantryItem2), "Should contain second pantry item");
 
-    assertEquals(1, fridgeItems.size());
-    assertTrue(fridgeItems.contains(fridgeItem));
+    assertEquals(1, fridgeItems.size(), "Should find 1 fridge item");
+    assertTrue(fridgeItems.contains(fridgeItem), "Should contain the fridge item");
 
-    assertTrue(freezerItems.isEmpty());
+    assertTrue(freezerItems.isEmpty(), "Should find no freezer items");
   }
 
   // --- Null Argument Tests ---
 
   @Test
-  void save_nullItem_shouldThrowNullPointerException() {
-    assertThrows(NullPointerException.class, () -> repository.save(null));
+  void saveNullItemShouldThrowNullPointerException() {
+    assertThrows(
+        NullPointerException.class,
+        () -> repository.save(null),
+        "Saving null item should throw NullPointerException");
   }
 
   @Test
-  void findById_nullId_shouldThrowNullPointerException() {
-    assertThrows(NullPointerException.class, () -> repository.findById(null));
+  void findByIdNullIdShouldThrowNullPointerException() {
+    assertThrows(
+        NullPointerException.class,
+        () -> repository.findById(null),
+        "Finding by null ID should throw NullPointerException");
   }
 
   @Test
-  void deleteById_nullId_shouldThrowNullPointerException() {
-    assertThrows(NullPointerException.class, () -> repository.deleteById(null));
+  void deleteByIdNullIdShouldThrowNullPointerException() {
+    assertThrows(
+        NullPointerException.class,
+        () -> repository.deleteById(null),
+        "Deleting by null ID should throw NullPointerException");
   }
 
   @Test
-  void findByLocation_nullLocation_shouldThrowNullPointerException() {
-    assertThrows(NullPointerException.class, () -> repository.findByLocation(null));
+  void findByLocationNullLocationShouldThrowNullPointerException() {
+    assertThrows(
+        NullPointerException.class,
+        () -> repository.findByLocation(null),
+        "Finding by null location should throw NullPointerException");
   }
 }
