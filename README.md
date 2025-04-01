@@ -1,6 +1,6 @@
-# Spantry: Fridge & Pantry Pal
+# Spantry: Smart Pantry
 
-**Note:** This project is currently in the **early alpha stage**. The core command-line inventory management features are implemented, but it's not yet ready for general use.
+**Note:** This project is currently in the **MVP stage**. The core command-line inventory management features are implemented, but it's not yet ready for general use.
 
 ## Description
 
