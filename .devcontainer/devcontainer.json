@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
+  "name": "spantry",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "dev",
+  "workspaceFolder": "/workspaces/spantry",
+  "remoteUser": "dev",
+
+  // Keep the sshd entrypoint running so SSH access works while VS Code is
+  // attached via the Dev Containers extension.
+  "overrideCommand": false,
+
+  // NOTE: no "forwardPorts" here. Zed's dev container support translates it
+  // into an extra docker-published host port, which collides with the compose
+  // file's 2237:22 mapping and makes the container fail to start.
+
+  // Warm the Gradle wrapper + dependency cache (both on named volumes).
+  "postCreateCommand": "./gradlew --no-daemon assemble",
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "java.jdt.ls.java.home": "/opt/java/openjdk"
+      },
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "anthropic.claude-code"
+      ]
+    }
+  }
+}

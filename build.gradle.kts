@@ -30,8 +30,10 @@ spotless {
         googleJavaFormat()
         // Remove unused imports
         removeUnusedImports()
-        // Ensure consistent line endings
-        lineEndings = com.diffplug.spotless.LineEnding.PLATFORM_NATIVE // Or WINDOWS, UNIX
+        // Line endings follow git (.gitattributes pins the repo to LF) instead of
+        // the platform: the same worktree is shared between Windows and the Linux
+        // dev container, and PLATFORM_NATIVE made each side rewrite every file.
+        lineEndings = com.diffplug.spotless.LineEnding.GIT_ATTRIBUTES_FAST_ALLSAME
     }
     // Optional: Configure formatting for other file types like build.gradle.kts itself
     kotlinGradle {

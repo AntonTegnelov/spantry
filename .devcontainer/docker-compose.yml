@@ -1,0 +1,44 @@
+name: spantry
+
+services:
+  dev:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    image: spantry-dev:latest
+    container_name: spantry
+    hostname: spantry
+    ports:
+      # Host 2237 -> container sshd :22. Port allocation lives in
+      # E:\Programmering\Code\DEVCONTAINER_TEMPLATE.md — claim there first.
+      - "2237:22"
+    volumes:
+      # Repo root (includes any gitignored .env via the mount, never the image).
+      - ..:/workspaces/spantry:cached
+      # Host pubkeys installed by the entrypoint at startup — edit
+      # %USERPROFILE%\.ssh\authorized_keys and restart, no rebuild needed.
+      - ${USERPROFILE}/.ssh/authorized_keys:/tmp/host_authorized_keys:ro
+      # Persist Claude Code OAuth credentials across rebuilds.
+      - claude-config:/home/dev/.claude
+      # Stable sshd host-key fingerprint across down/up cycles.
+      - ssh-host-keys:/etc/ssh/keys
+      # PAT credential store (and any other ~/.ssh state) survives recreates.
+      - ssh-config:/home/dev/.ssh
+      # Gradle user home (wrapper distributions, dependency cache) survives
+      # recreates (Zed's dev container flow recreates on first attach).
+      - gradle-home:/home/dev/.gradle
+      # Linux build outputs and project-local Gradle state on named volumes:
+      # masks the Windows build/ and .gradle/ from the bind mount (lock files
+      # and file-system probes are per-platform) and survives recreates.
+      - build:/workspaces/spantry/build
+      - project-gradle:/workspaces/spantry/.gradle
+    restart: unless-stopped
+    init: true
+
+volumes:
+  claude-config:
+  ssh-host-keys:
+  ssh-config:
+  gradle-home:
+  build:
+  project-gradle:

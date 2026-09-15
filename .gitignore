@@ -72,3 +72,7 @@ Thumbs.db
 .aider.conf.yml
 CONVENTIONS.MD
 .aider*
+
+# AI-assistant / editor-agent configs (local only)
+.cursor/
+.claude/
