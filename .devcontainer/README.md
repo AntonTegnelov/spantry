@@ -108,8 +108,10 @@ credentials live on the `claude-config` named volume and survive rebuilds.
   `ssh-keygen -R "[localhost]:2237"` on the host and reconnect.
 - **Dozens of files show as modified with an empty diff** after a build on
   the other side — a stale-stat artifact of sharing one index between
-  Windows and Linux git. Nothing changed; clear it per path with
-  `git status --short | awk '$1=="M"{print $2}' | xargs -n1 git update-index --refresh --`.
+  Windows and Linux git. Confirm `git diff --stat` is empty, then
+  `git checkout -- <those files>` rewrites the index entries (identical
+  content, so nothing is lost). Don't use `git update-index -- <file>` for
+  this: naming a path there stages it.
   (The repo is pinned to LF via `.gitattributes` and Spotless uses
   git-aware line endings precisely so builds don't rewrite files.)
 - **`./gradlew: bad interpreter` / `\r` errors** — the wrapper script picked
