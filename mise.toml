@@ -1,0 +1,9 @@
+[tools]
+java = "temurin-17"
+node = "22"
+
+[tasks.build]
+run = "sh ./gradlew assemble"
+
+[tasks.test]
+run = "sh ./gradlew test"
